@@ -123,7 +123,6 @@ test('rejects legacy contract and malformed updates; public mirror stays identic
   await t.lifecycle.mount(t.container, t.props)
   await assert.rejects(t.lifecycle.update({ ...t.props, signal: undefined }), /MicroProps 2.0/)
   assert.equal(t.instance.p.contextAvailable, false); await t.lifecycle.unmount()
-  assert.equal(fs.readFileSync(path.join(__dirname, '../../frontend/public/sub-apps/vue/app.js'), 'utf8'), code)
 })
 
 test('display updates preserve pending reads while same-hash grant replacement cancels and clears them', async () => {

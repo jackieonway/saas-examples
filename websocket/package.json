@@ -4,7 +4,10 @@
   "private": true,
   "type": "module",
   "packageManager": "npm@11.16.0",
-  "engines": { "node": ">=24.18.0 <25", "npm": ">=11.16.0 <12" },
+  "engines": {
+    "node": ">=24.18.0 <25",
+    "npm": ">=11.16.0 <12"
+  },
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 3007 --strictPort",
     "typecheck": "tsc --noEmit",
@@ -13,12 +16,17 @@
     "test": "npm run build && node --test tests/*.test.mjs",
     "test:browser": "node tests/browser-smoke.mjs"
   },
-  "dependencies": { "react": "19.3.0", "react-dom": "19.3.0", "socket.io-client": "4.8.4" },
+  "dependencies": {
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "socket.io-client": "4.8.4"
+  },
   "devDependencies": {
     "@types/node": "22.20.4",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "typescript": "5.9.3",
-    "vite": "8.3.4"
+    "vite": "8.3.4",
+    "playwright": "1.64.1"
   }
 }

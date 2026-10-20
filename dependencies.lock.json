@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "sdkVersion": "1.0.0",
+  "files": {
+    "micro-vue/public/vendor/micro-sdk.js": "16434ed209846c1e41f3d74f22654027289e44caf26e4d77fe1aeb0146b03ee5",
+    "micro-jquery/public/vendor/micro-sdk.js": "16434ed209846c1e41f3d74f22654027289e44caf26e4d77fe1aeb0146b03ee5"
+  }
+}

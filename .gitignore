@@ -1,0 +1,9 @@
+node_modules/
+target/
+dist/
+.browsers/
+*.log
+*.tsbuildinfo
+.env*
+*.pem
+*.key

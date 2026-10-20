@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { launchBrowser } from '../../../tests/browser/runtime.mjs';
+import { launchBrowser } from './browser-runtime.mjs';
 import { createServer } from 'vite';
 
 const previousEndpoint = process.env.VITE_CHAT_ENDPOINT;

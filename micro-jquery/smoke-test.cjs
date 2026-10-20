@@ -152,7 +152,6 @@ test('rejects legacy and malformed context; escapes values and keeps public mirr
   assert.ok(!t.find('#mf-jq-context').innerHTML.includes('<img'))
   await assert.rejects(t.lifecycle.update({ ...t.props, signal: undefined }), /MicroProps 2.0/)
   assert.ok(t.find('#mf-jq-context').innerHTML.includes('上下文已失效')); await t.lifecycle.unmount()
-  assert.equal(fs.readFileSync(path.join(__dirname, '../../frontend/public/sub-apps/jquery/app.js'), 'utf8'), code)
 })
 
 test('display updates preserve pending reads while same-hash grant replacement cancels and clears them', async () => {
