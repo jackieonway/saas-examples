@@ -3,11 +3,11 @@
 独立维护 Vue、jQuery、Socket.IO 聊天和 OAuth 演练。每个示例使用自己的依赖锁和构建入口，不读取平台源码。聊天前后端、OAuth 前后端分别保留在各自示例目录。
 
 ```sh
-npm run install:all
-npm run deps:check
-npm run build
-npm test
-npm run test:rust
+npm --prefix micro-vue ci && npm --prefix micro-jquery ci && npm --prefix websocket ci && npm --prefix oauth-playground/frontend ci
+node scripts/check-inputs.mjs
+npm --prefix micro-vue run build && npm --prefix micro-jquery run build && npm --prefix websocket run build && npm --prefix oauth-playground/frontend run build
+npm --prefix micro-vue test && npm --prefix micro-jquery test && npm --prefix websocket test && node --test oauth-playground/frontend/tests/*.test.mjs oauth-playground/tests/delivery.mjs
+cargo test --locked --manifest-path oauth-playground/backend/Cargo.toml && cargo test --locked --manifest-path websocket/backend/Cargo.toml
 ```
 
 工具版本：Node 24.18.0、npm 11.16.0、Rust 1.97.0。需要实际平台交互时，按各示例说明显式配置 HTTPS API 和客户端身份。独立单元/静态交付测试不代表真实平台联合验收通过。
