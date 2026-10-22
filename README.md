@@ -1,17 +1,16 @@
-# SaaS 接入示例
+# 接入示例集合
 
-独立维护 Vue、jQuery、Socket.IO 聊天和 OAuth 演练。每个示例使用自己的依赖锁和构建入口，不读取平台源码。聊天前后端、OAuth 前后端分别保留在各自示例目录。
+本仓库的示例独立安装与构建，不读取平台或业务仓库源码。Node 24.18.0、npm 11.16.0、Rust 1.97.0 为工具基线。
 
-```sh
-npm --prefix micro-vue ci && npm --prefix micro-jquery ci && npm --prefix websocket ci && npm --prefix oauth-playground/frontend ci
-node scripts/check-inputs.mjs
-npm --prefix micro-vue run build && npm --prefix micro-jquery run build && npm --prefix websocket run build && npm --prefix oauth-playground/frontend run build
-npm --prefix micro-vue test && npm --prefix micro-jquery test && npm --prefix websocket test && node --test oauth-playground/frontend/tests/*.test.mjs oauth-playground/tests/delivery.mjs
-cargo test --locked --manifest-path oauth-playground/backend/Cargo.toml && cargo test --locked --manifest-path websocket/backend/Cargo.toml
-```
+| 示例 | 内容 | 开发端口 | 说明 |
+| --- | --- | --- | --- |
+| micro-vue | classic Vue 微应用 | 3005 | [开发与发布](micro-vue/README.md) |
+| micro-jquery | classic jQuery 微应用 | 3006 | [开发与发布](micro-jquery/README.md) |
+| websocket | React 聊天页、独立 Rust Socket.IO 参考 API | 3007 / 3008 | [开发与部署](websocket/README.md) |
+| oauth-playground | Vite 演练页、Rust OAuth 流程 API | 3010 / 3011 | [开发与部署](oauth-playground/README.md) |
 
-工具版本：Node 24.18.0、npm 11.16.0、Rust 1.97.0。需要实际平台交互时，按各示例说明显式配置 HTTPS API 和客户端身份。独立单元/静态交付测试不代表真实平台联合验收通过。
+进入所需前端执行 npm ci、npm run dev，npm run build 生成 dist。Rust 服务分别在自己的 backend 执行 cargo run --locked。没有跨示例统一启动器。
 
-Vue/jQuery 固定 SDK 1.0.0 的副本和 SHA-256 记录在 dependencies.lock.json；不跟随平台或 SDK 主分支。各示例原始提交历史通过 subtree 导入保留。旧说明中的平台根调度命令属于平台联合使用方式，独立运行请直接使用各示例的 package.json。
+仓库根执行 node scripts/check-inputs.mjs 校验 Vue/jQuery 的固定 SDK 副本，来源摘要在 dependencies.lock.json。升级从独立 SDK 仓库取得审阅版本，再更新副本、摘要和测试，不跟随上游 main。
 
-OAuth Dockerfile 的构建 context 是 oauth-playground/；聊天浏览器测试使用自身的 Playwright 开发依赖，需显式安装浏览器。
+CI 分别构建四个前端、运行前端/交付测试及两个 Rust 工程检查；不执行生产部署。静态页面只交付 dist，不发布源码、node_modules 或私有配置。示例不能替代真实平台授权或数据库业务验收。

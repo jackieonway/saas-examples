@@ -31,7 +31,24 @@ impl ServerConfig {
             "CHAT_ALLOWED_ORIGINS",
             "http://127.0.0.1:3007,http://localhost:3007",
         )?;
-        Self::new(&bind, &origins)
+        let mut config = Self::new(&bind, &origins)?;
+        // Explicit opt-in for the platform's opaque-origin sandbox on loopback.
+        // This demo has no accounts, credentials or persistent messages.
+        config.configure_sandbox_origin(&read_env("CHAT_ALLOW_SANDBOX_ORIGIN", "false")?)?;
+        Ok(config)
+    }
+
+    fn configure_sandbox_origin(&mut self, value: &str) -> Result<(), ConfigError> {
+        match value {
+            "false" => Ok(()),
+            "true" => {
+                self.origins.push(HeaderValue::from_static("null"));
+                Ok(())
+            }
+            _ => Err(ConfigError(
+                "CHAT_ALLOW_SANDBOX_ORIGIN must be true or false",
+            )),
+        }
     }
 
     /// Validate configuration without mutating process environment.
@@ -94,6 +111,17 @@ fn read_env(name: &str, default: &str) -> Result<String, ConfigError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn sandbox_origin_requires_explicit_opt_in() {
+        let mut config = ServerConfig::new("127.0.0.1:0", "http://localhost:3007").unwrap();
+        config.configure_sandbox_origin("false").unwrap();
+        assert!(!config.origins.iter().any(|origin| origin == "null"));
+        assert!(config.configure_sandbox_origin("*").is_err());
+        config.configure_sandbox_origin("true").unwrap();
+        assert!(config.origins.iter().any(|origin| origin == "null"));
+        assert_eq!(config.origins.len(), 2);
+    }
 
     #[test]
     fn only_loopback_and_exact_origins_are_accepted() {
