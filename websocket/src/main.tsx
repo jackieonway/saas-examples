@@ -1,30 +1,21 @@
-import { createRoot, type Root } from 'react-dom/client';
-import { installIframeBridge } from '../vendor/micro-app-sdk/1.0.0/index.mjs';
+import { createRoot } from 'react-dom/client';
+import { flushSync } from 'react-dom';
 import SocketDemo from '../frontend';
+import { createSocketLifecycle } from './qiankun-lifecycle.ts';
 import './styles.css';
 
-const container = document.getElementById('root');
-if (!container) throw new Error('The demo root element is missing');
-let root: Root | null = null;
-function mount(target: HTMLElement) {
-  root?.unmount();
-  root = createRoot(target);
-  root.render(<SocketDemo />);
+function renderChat(target: HTMLElement) {
+  const root = createRoot(target);
+  flushSync(() => root.render(<SocketDemo />));
+  // Dispose the socket before another authorization context mounts.
+  return () => flushSync(() => root.unmount());
 }
 
-if (window.parent === window) {
-  mount(container);
-} else {
-  installIframeBridge(window);
-  window.MicroIframe.connect({
-    appCode: 'websocket-chat',
-    allowedHostOrigins: ['http://127.0.0.1:3000', 'http://localhost:3000'],
-    container,
-    lifecycle: {
-      name: 'websocket-chat',
-      mount: target => mount(target),
-      update: props => { document.documentElement.dataset.theme = props.theme; },
-      unmount: () => { root?.unmount(); root = null; },
-    },
-  });
+export const { bootstrap, mount, update, unmount } = createSocketLifecycle(renderChat);
+
+// Standalone development never invents platform credentials or connects automatically.
+if (!(window as Window & { __POWERED_BY_QIANKUN__?: boolean }).__POWERED_BY_QIANKUN__) {
+  const target = document.getElementById('root');
+  if (!target) throw new Error('The demo root element is missing');
+  renderChat(target);
 }

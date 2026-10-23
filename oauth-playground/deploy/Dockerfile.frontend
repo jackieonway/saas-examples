@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Context: mini-services/oauth-playground. Build tools never enter runtime.
-ARG NODE_IMAGE=node:24.18.0-alpine
+ARG NODE_IMAGE=node:24.22.1-alpine
 ARG NGINX_IMAGE=nginxinc/nginx-unprivileged:1.28.0-alpine
 FROM ${NODE_IMAGE} AS build
 WORKDIR /app

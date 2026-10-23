@@ -16,9 +16,9 @@ async function assertEntry(baseUrl, built) {
   assert.equal(response.status, 200)
   const html = await response.text()
   const scripts = [...html.matchAll(/<script\b([^>]*)\bsrc="([^"]+)"[^>]*>/g)]
-  assert.equal(scripts.length, 3, 'only the registered SDK and classic lifecycle scripts are served')
+  assert.equal(scripts.length, 4, 'framework, SDK, internal view and final qiankun entry are served')
   assert.ok(!html.includes('type="module"'), 'host HTML loaders must not evaluate Vite client modules')
-  assert.deepEqual(scripts.map(match => match[2]), [vendor, 'vendor/micro-sdk.js', 'app.js'])
+  assert.deepEqual(scripts.map(match => match[2]), [vendor, 'vendor/micro-sdk.js', 'app.js', 'qiankun-entry.js'])
   for (const [, , src] of scripts) {
     assert.ok(!src.startsWith('/') && !src.includes('://'), 'asset URL remains relative to its version entry')
     const assetUrl = new URL(src, new URL('index.html', baseUrl))

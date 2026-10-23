@@ -1,13 +1,15 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
-import { build, createServer, preview } from 'vite';
+import { build, preview } from 'vite';
 
 async function checkHttp(url) {
   const response = await fetch(`${url}/`);
   assert.equal(response.status, 200);
   const html = await response.text();
   assert.match(html, /WebSocket Demo/);
+  assert.doesNotMatch(html, /type="module"|@vite\/client/);
+  assert.match(html, /<script[^>]+entry/);
   const scriptPaths = [...html.matchAll(/<script[^>]+src="([^"]+)"/g)].map((match) => match[1]);
   assert.ok(scriptPaths.length > 0);
   for (const scriptPath of scriptPaths) {
@@ -30,14 +32,13 @@ async function checkHttp(url) {
   }
 }
 
-test('Vite dev serves the standalone entry and returns real 404s', async () => {
-  const devServer = await createServer({ server: { port: 0, host: '127.0.0.1' }, logLevel: 'error' });
+test('classic UMD preview serves the standalone/qiankun entry and returns real 404s', async () => {
+  const devServer = await preview({ preview: { port: 0, host: '127.0.0.1' }, logLevel: 'error' });
   try {
-    await devServer.listen();
     const address = devServer.httpServer.address();
     await checkHttp(`http://127.0.0.1:${address.port}`);
   } finally {
-    await devServer.close();
+    await new Promise((resolve, reject) => devServer.httpServer.close(error => error ? reject(error) : resolve()));
   }
 });
 
@@ -73,6 +74,9 @@ test('only the validated public endpoint reaches browser build output', async ()
       assert.equal(browserCode.includes(values[key]), false, key);
     }
     assert.equal(browserCode.includes('XTransformPort'), false);
+    for (const legacy of ['installIframeBridge', 'MicroIframe', '__MICRO_APP__']) {
+      assert.equal(browserCode.includes(legacy), false, `classic entry must not contain ${legacy}`);
+    }
   } finally {
     for (const [key, value] of Object.entries(previous)) {
       if (value === undefined) delete process.env[key];

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "sdkVersion": "2.0.0",
+  "source": "saas-micro-app-sdk/releases/2.0.0/sdk.js",
+  "baseCommit": "7dd1b57d01ecb2e2892728031364384b5b7439a6",
+  "workingTree": true,
+  "files": [
+    {
+      "path": "micro-sdk.js",
+      "bytes": 18057,
+      "sha256": "3c1545da8ac535dd3a7a2fd619bcd2994977b8711a06a625fa661dda13ebb4df"
+    }
+  ]
+}

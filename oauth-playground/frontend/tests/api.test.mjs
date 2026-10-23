@@ -1,6 +1,15 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { apiRequest, publicData } from '../src/api.js'
+import { apiRequest, publicData, flowApiPath } from '../src/api.js'
+
+test('OAuth gateway paths stay same-origin and never accept URLs, traversal or credential parameters', () => {
+  assert.equal(flowApiPath('/api/device-token', '/oauth-playground-api'), '/oauth-playground-api/device-token')
+  assert.equal(flowApiPath('/api/config', '/tools/oauth/'), '/tools/oauth/config')
+  for (const prefix of ['https://elsewhere.test/api', '//elsewhere.test', '/api/../private', '/api?token=secret', '/api#private', '/api\\private']) {
+    assert.throws(() => flowApiPath('/api/config', prefix), TypeError)
+  }
+  for (const path of ['//elsewhere.test', '/api/../private', '/api/config?token=secret']) assert.throws(() => flowApiPath(path), TypeError)
+})
 
 test('resource inspection redacts credential fields at every nesting level without hiding public grant metadata', () => {
   const input = { granted: true, tokenType: 'Bearer', hasRefreshToken: true, scope: 'profile', access_token: 'private', password: 'private', nested: [{ clientSecret: 'private', code_verifier: 'private', device_code: 'private', roles: ['reader'] }] }

@@ -23,6 +23,9 @@ use serde_json::{json, Value};
 use tokio::{net::TcpListener, sync::Notify, sync::Semaphore, task::JoinHandle};
 use tower::ServiceExt;
 
+#[path = "support/node_http.rs"]
+mod node_http;
+
 const PUBLIC_ORIGIN: &str = "http://127.0.0.1:3010";
 const CC_SECRET: &str = "private-cc-secret";
 const AUTH_SECRET: &str = "private-auth-secret";
@@ -59,13 +62,12 @@ struct PlatformState {
 struct Platform {
     origin: String,
     state: Arc<PlatformState>,
-    server: JoinHandle<()>,
+    server: Option<JoinHandle<()>>,
+    _node: Option<node_http::NodeHttp>,
 }
 
 impl Platform {
     async fn start() -> Self {
-        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
-        let origin = format!("http://{}", listener.local_addr().unwrap());
         let state = Arc::new(PlatformState {
             records: Mutex::new(Vec::new()),
             mode: AtomicUsize::new(NORMAL),
@@ -76,11 +78,20 @@ impl Platform {
         let router = Router::new()
             .fallback(platform_request)
             .with_state(state.clone());
-        let server = tokio::spawn(async move { axum::serve(listener, router).await.unwrap() });
+        let (origin, server, node) = if std::env::var_os("OAUTH_TEST_NODE").is_some() {
+            let node = node_http::NodeHttp::start(router);
+            (node.origin.clone(), None, Some(node))
+        } else {
+            let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+            let origin = format!("http://{}", listener.local_addr().unwrap());
+            let server = tokio::spawn(async move { axum::serve(listener, router).await.unwrap() });
+            (origin, Some(server), None)
+        };
         Self {
             origin,
             state,
             server,
+            _node: node,
         }
     }
 
@@ -130,7 +141,9 @@ impl Platform {
 
 impl Drop for Platform {
     fn drop(&mut self) {
-        self.server.abort();
+        if let Some(server) = &self.server {
+            server.abort();
+        }
     }
 }
 

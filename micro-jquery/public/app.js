@@ -2,12 +2,8 @@
  * micro-jquery 子应用 — SaaS Platform 微前端「遗留系统」演示 (jQuery, 无构建步骤)
  * 模拟十年前的内部工单处理系统, 证明遗留栈也能接入新权限链路。
  *
- * 生命周期契约 (与主应用共享, 必须精确一致):
- *   window.__MICRO_APP__ = {
- *     name: string,
- *     mount(container: HTMLElement, props: MicroProps): Promise<void>,
- *     update(props: MicroProps): Promise<void>, unmount(): Promise<void>
- *   }
+ * app.js 只创建应用内部视图，qiankun-entry.js 最终公开
+ * bootstrap/mount/update/unmount；授权上下文只从 props.platform 取得。
  *   MicroProps 2.0 包含应用 token、租户、组织、角色、操作权限、独立 dataGrants、
  *   contextVersion/contextEpoch、两个到期时间和宿主 AbortSignal；详见接入文档。
  *
@@ -83,7 +79,7 @@
       stopContext()
       currentProps = props
       contextController = new AbortController()
-      if (!window.MicroSdk || window.MicroSdk.sdkVersion !== '1.0.0') throw new Error('Registered micro SDK 1.0.0 required')
+      if (!window.MicroSdk || typeof window.MicroSdk.createContextClient !== 'function') throw new Error('Registered micro SDK required')
       contextClient = window.MicroSdk.createContextClient(Object.assign({}, props, { signal: contextController.signal }))
       hostSignal = props.signal
       hostAbort = function () {
@@ -464,11 +460,9 @@
     try { mountContainer.setAttribute('data-jq-bind', 'bound-ok') } catch (e) {}
   }
 
-  /* ===== 生命周期契约 ===== */
-  window.__MICRO_APP__ = {
-    name: 'micro-jquery',
-    sdkVersion: window.MicroSdk && window.MicroSdk.sdkVersion,
-    mount: function (container, props) {
+  /* ===== 只在当前应用脚本之间共享的视图实现 ===== */
+  var view = {
+    render: function (container, props) {
       return new Promise(function (resolve, reject) {
         try {
           if (!container) {
@@ -519,7 +513,7 @@
         }
       })
     },
-    unmount: function () {
+    dispose: function () {
       return new Promise(function (resolve) {
         stopContext()
         try {
@@ -542,7 +536,7 @@
     /* 增量更新契约: 路由/主题/菜单/令牌变化时由容器调用, 不重挂。
        遗留系统无响应式框架 —— 手术式只刷新头部路由/令牌 chip 与更新徽章,
        表格/筛选/排序/滚动状态全部保留(即「未重挂」的行为学证据)。 */
-    update: function (props) {
+    updateContext: function (props) {
       return new Promise(function (resolve, reject) {
         try {
           if (!mountContainer) {
@@ -594,4 +588,5 @@
       })
     },
   }
+  window['legacy-jquery'] = { createView: function () { return view } }
 })()

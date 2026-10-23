@@ -1,0 +1,54 @@
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+@source "./";
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+@theme inline {
+  --color-background: var(--report-background);
+  --color-foreground: var(--report-foreground);
+  --color-card: var(--report-card);
+  --color-primary: var(--report-primary);
+  --color-primary-foreground: var(--report-primary-foreground);
+  --color-muted: var(--report-muted);
+  --color-muted-foreground: var(--report-muted-foreground);
+  --color-destructive: var(--report-destructive);
+  --color-border: var(--report-border);
+}
+
+.saas-report-center {
+  --report-background: #f7faf9;
+  --report-foreground: #193235;
+  --report-card: #ffffff;
+  --report-primary: #10776f;
+  --report-primary-foreground: #ffffff;
+  --report-muted: #edf3f1;
+  --report-muted-foreground: #647874;
+  --report-destructive: #b9383f;
+  --report-border: #d8e4df;
+  color: var(--report-foreground);
+  background: var(--report-background);
+  font: 14px/1.6 ui-sans-serif, system-ui, "Microsoft YaHei", sans-serif;
+  min-height: 100%;
+  isolation: isolate;
+}
+.saas-report-center[data-theme=dark] {
+  --report-background: #122022;
+  --report-foreground: #e6efed;
+  --report-card: #1b2c2d;
+  --report-primary: #7acdc1;
+  --report-primary-foreground: #122022;
+  --report-muted: #263b3b;
+  --report-muted-foreground: #a2b8b3;
+  --report-destructive: #ff9b9f;
+  --report-border: #354e4b;
+  color-scheme: dark;
+}
+.saas-report-center *, .saas-report-center *::before, .saas-report-center *::after {
+  box-sizing: border-box;
+  border: 0 solid var(--report-border);
+}
+.saas-report-center h3, .saas-report-center p, .saas-report-center dl,
+.saas-report-center dd { margin: 0; }
+.saas-report-center button { font: inherit; cursor: pointer; }
+.saas-report-center button:disabled { cursor: default; }
+.saas-report-center button:focus-visible { outline: 2px solid var(--report-primary); outline-offset: 3px; }

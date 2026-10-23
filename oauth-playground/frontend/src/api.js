@@ -25,9 +25,17 @@ function publicConfig(value) {
   return { publicOrigin: string('publicOrigin'), platformOrigin: string('platformOrigin'), scope: string('scope'), flows }
 }
 
-export async function apiRequest(path, body, signal) {
+export function flowApiPath(path, apiBase = '/api') {
+  if (typeof path !== 'string' || !/^\/api\/[a-z-]+$/.test(path) ||
+      typeof apiBase !== 'string' || !/^\/(?!\/)[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*\/?$/.test(apiBase)) {
+    throw new TypeError('OAuth API requires an explicit same-origin path prefix')
+  }
+  return apiBase.replace(/\/$/, '') + path.slice('/api'.length)
+}
+
+export async function apiRequest(path, body, signal, { apiBase = '/api' } = {}) {
   const timeout = AbortSignal.timeout(20000)
-  const response = await fetch(path, {
+  const response = await fetch(flowApiPath(path, apiBase), {
     method: body === undefined ? 'GET' : 'POST',
     credentials: 'same-origin',
     cache: 'no-store',

@@ -18,6 +18,12 @@ pid /tmp/nginx.pid;
 error_log /dev/stderr crit;
 events { worker_connections 512; }
 http {
+    # Forward only the API's secure session cookie. Platform cookies and bearer
+    # material never cross the rehearsal API boundary; Origin is preserved.
+    map $http_cookie $oauth_session_cookie {
+        default "";
+        "~(?:^|;\\s*)(?<oauth_session>__Host-oauth_playground=[A-Za-z0-9_-]+)(?:;|$)" $oauth_session;
+    }
     access_log off;
     server_tokens off;
     client_max_body_size 32k;
@@ -47,7 +53,10 @@ http {
         proxy_connect_timeout 3s;
         proxy_read_timeout 20s;
         proxy_send_timeout 10s;
-        proxy_set_header Host $host;
+        proxy_set_header Host $http_host;
+        proxy_set_header Origin $http_origin;
+        proxy_set_header Authorization "";
+        proxy_set_header Cookie $oauth_session_cookie;
         proxy_set_header X-Forwarded-Proto https;
         proxy_set_header X-Forwarded-For $remote_addr;
         proxy_set_header X-Real-IP $remote_addr;
@@ -56,6 +65,15 @@ http {
         proxy_hide_header Referrer-Policy;
         location = /healthz { return 200 "ok\\n"; }
         location = /api { return 404; }
+        location = /oauth-playground-api { return 404; }
+        location ^~ /oauth-playground-api/ {
+            rewrite ^/oauth-playground-api/(.*)$ /api/$1 break;
+            proxy_hide_header Cache-Control;
+            add_header Cache-Control no-store always;
+            add_header Strict-Transport-Security "max-age=31536000" always;
+            add_header Referrer-Policy no-referrer always;
+            proxy_pass http://$oauth_api;
+        }
         location ^~ /api/ {
             proxy_hide_header Cache-Control;
             proxy_hide_header Referrer-Policy;

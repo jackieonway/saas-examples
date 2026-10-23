@@ -1,25 +1,21 @@
 /**
  * micro-vue 子应用 — SaaS Platform 微前端演示 (Vue 3 全局构建, 无构建步骤)
  *
- * 生命周期契约 (与主应用共享, 必须精确一致):
- *   window.__MICRO_APP__ = {
- *     name: string,
- *     mount(container: HTMLElement, props: MicroProps): Promise<void>,
- *     update(props: MicroProps): Promise<void>, unmount(): Promise<void>
- *   }
+ * app.js 只创建应用内部视图，qiankun-entry.js 最终公开
+ * bootstrap/mount/update/unmount；授权上下文只从 props.platform 取得。
  *   MicroProps 2.0 包含应用 token、租户、组织、角色、操作权限、独立 dataGrants、
  *   contextVersion/contextEpoch、两个到期时间和宿主 AbortSignal；详见接入文档。
  *
  * 视图: props.routePath === '/micro/vue-workshop/security' → 「权限与沙箱」, 否则「总览」。
  *
  * 实现说明:
- * - Vue 库来自 /vendor/vue.global.prod.js (先于本文件加载)。该全局构建以 top-level
- *   `var Vue = ...` 暴露; 沙箱 with(proxy)+has()→true 执行模式下该 var 经 with 对象
- *   写入代理 (实证), 故优先取 window.Vue, 兜底裸标识符 —— 两种执行模型都能工作。
+ * - Vue 库来自 /vendor/vue.global.prod.js (先于本文件加载)。原全局构建声明顶层
+ *   `var Vue`，本项目在同一文件末尾显式赋值 window.Vue，供 qiankun 逐脚本函数执行时
+ *   传递给后续脚本；window 是当前应用沙箱代理，不会写入宿主的真实全局对象。
  * - 全部组件使用 render 函数 (h 闭包引用), 不使用 template 字符串:
  *   Vue 全局构建的运行时模板编译器会用 Function(code)() 在「真实全局作用域」执行
  *   生成代码并引用裸标识符 Vue —— 在防污染沙箱中真实 window 没有 Vue 会抛
- *   ReferenceError(沙箱模拟实证)。render 函数则完全在沙箱闭包内解析, 双模式可用。
+ *   ReferenceError(沙箱模拟实证)。render 函数完全在应用沙箱闭包内解析。
  * - 样式全部手写、选择器一律 .mf-vue- 前缀, 以 <style> 渲染进 mount 容器内,
  *   随 app.unmount() 一并清理, 不向 document.head 泄漏。
  * - fetch('/api/external/menus' | '/api/external/roles') 为同源主应用请求
@@ -31,12 +27,10 @@
 ;(function () {
   'use strict'
 
-  /* ===== 解析 Vue 全局库 (兼容沙箱的两种 script 执行方式) ===== */
+  /* ===== 解析已由前一个 classic 脚本暴露的 Vue 库 ===== */
   var VueLib = null
   if (typeof window !== 'undefined' && window.Vue && typeof window.Vue.createApp === 'function') {
     VueLib = window.Vue
-  } else if (typeof Vue !== 'undefined' && Vue && typeof Vue.createApp === 'function') {
-    VueLib = Vue
   }
 
   /* ===== 模块级挂载状态 ===== */
@@ -152,7 +146,7 @@
       stopContext()
       currentProps = props
       contextController = new AbortController()
-      if (!window.MicroSdk || window.MicroSdk.sdkVersion !== '1.0.0') throw new Error('Registered micro SDK 1.0.0 required')
+      if (!window.MicroSdk || typeof window.MicroSdk.createContextClient !== 'function') throw new Error('Registered micro SDK required')
       contextClient = window.MicroSdk.createContextClient(Object.assign({}, props, { signal: contextController.signal }))
       hostSignal = props.signal
       hostAbort = function () {
@@ -594,11 +588,9 @@
     }
   }
 
-  /* ===== 生命周期契约 ===== */
-  window.__MICRO_APP__ = {
-    name: 'micro-vue',
-    sdkVersion: window.MicroSdk && window.MicroSdk.sdkVersion,
-    mount: function (container, props) {
+  /* ===== 只在当前应用脚本之间共享的视图实现 ===== */
+  var view = {
+    render: function (container, props) {
       return new Promise(function (resolve, reject) {
         try {
           if (!container) {
@@ -644,7 +636,7 @@
         }
       })
     },
-    unmount: function () {
+    dispose: function () {
       return new Promise(function (resolve) {
         stopContext()
         if (rootVm && rootVm._timer) {
@@ -669,7 +661,7 @@
     },
     /* 增量更新契约: 路由/主题/菜单/令牌变化时由容器调用, 不重挂。
        写入响应式 propsState → 组件自动重渲染; seconds/notifyLog 等组件内部状态保留。 */
-    update: function (props) {
+    updateContext: function (props) {
       return new Promise(function (resolve, reject) {
         try {
           if (!mountedContainer) { resolve(); return }
@@ -689,4 +681,6 @@
       })
     },
   }
+  // The final entry replaces this factory namespace with qiankun's four exports.
+  window['vue-workshop'] = { createView: function () { return view } }
 })()

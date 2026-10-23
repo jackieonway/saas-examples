@@ -1,24 +1,26 @@
 {
   "name": "micro-vue",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "type": "module",
   "description": "SaaS Platform Vue 3 静态微应用，Vite 开发/构建与 classic HTML 生命周期入口",
   "packageManager": "npm@11.16.0",
   "engines": {
-    "node": ">=24.18.0 <25",
+    "node": ">=24.22.1 <25",
     "npm": ">=11.16.0 <12"
   },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test smoke-test.cjs static-delivery.test.cjs"
+    "test": "node --test smoke-test.cjs static-delivery.test.cjs vendor-sandbox.test.cjs",
+    "test:qiankun": "node --test --test-name-pattern=qiankun smoke-test.cjs vendor-sandbox.test.cjs"
   },
   "dependencies": {
     "vue": "3.5.43"
   },
   "devDependencies": {
+    "happy-dom": "21.0.4",
     "vite": "8.3.4"
   }
 }

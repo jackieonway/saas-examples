@@ -13,17 +13,35 @@ jobs:
         with:
           node-version-file: .nvmrc
       - run: npm install --global npm@11.16.0
-      - run: npm --prefix micro-vue ci && npm --prefix micro-jquery ci && npm --prefix websocket ci && npm --prefix oauth-playground/frontend ci
+      - run: npm --prefix micro-vue ci && npm --prefix micro-jquery ci && npm --prefix report-center ci && npm --prefix websocket ci && npm --prefix oauth-playground/frontend ci
       - run: node scripts/check-inputs.mjs
-      - run: npm --prefix micro-vue run build && npm --prefix micro-jquery run build && npm --prefix websocket run build && npm --prefix oauth-playground/frontend run build
-      - run: npm --prefix micro-vue test && npm --prefix micro-jquery test && npm --prefix websocket test && node --test oauth-playground/frontend/tests/*.test.mjs oauth-playground/tests/delivery.mjs
+      - run: node --test scripts/verify-delivery.test.mjs scripts/build-provenance.test.mjs
+      - run: npm --prefix micro-vue run build && npm --prefix micro-jquery run build && npm --prefix report-center run build && npm --prefix websocket run build && npm --prefix oauth-playground/frontend run build
+      - run: node scripts/verify-delivery.mjs
+      - run: npm --prefix micro-vue test && npm --prefix micro-jquery test && npm --prefix report-center test && npm --prefix websocket test && node --test oauth-playground/frontend/tests/*.test.mjs oauth-playground/tests/delivery.mjs
+      - run: node --test oauth-playground/tests/dev.test.mjs oauth-playground/tests/proxy.test.mjs
+      - run: sudo apt-get update && sudo apt-get install --yes nginx openssl
+      - run: npm --prefix oauth-playground run test:nginx
+        env:
+          OAUTH_TEST_NGINX: /usr/sbin/nginx
+          OAUTH_TEST_OPENSSL: /usr/bin/openssl
+      - run: node scripts/package-candidates.mjs ci-candidate
+      - run: node scripts/verify-candidate.mjs artifacts/candidates/ci-candidate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qiankun-example-candidates
+          path: artifacts/candidates/ci-candidate
   rust:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
       - run: rustup toolchain install 1.97.0 --profile minimal --component rustfmt --component clippy
       - run: cargo fmt --manifest-path oauth-playground/backend/Cargo.toml -- --check
       - run: cargo fmt --manifest-path websocket/backend/Cargo.toml -- --check
       - run: cargo test --locked --manifest-path oauth-playground/backend/Cargo.toml && cargo test --locked --manifest-path websocket/backend/Cargo.toml
+      - run: OAUTH_TEST_NODE="$(command -v node)" cargo test --locked --manifest-path oauth-playground/backend/Cargo.toml --test upstream_contract

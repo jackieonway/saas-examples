@@ -1,17 +1,14 @@
-import './style.css'
-import { apiRequest, explainError } from './api.js'
+import { explainError } from './api.js'
 import { createDevicePoller } from './device-poller.js'
 
-// Capture once and remove the authorization response before any network work.
-// The verifier and all tokens stay inside the Rust session, never browser state.
-const isCallback = location.pathname === '/callback' || location.pathname === '/callback.html'
-let callback
-if (isCallback) {
-  const params = new URLSearchParams(location.search)
-  callback = { state: params.get('state') || '', ...(params.has('code') ? { code: params.get('code') } : {}), ...(params.has('error') ? { error: params.get('error') } : {}) }
-  history.replaceState(null, '', '/callback')
-}
-
+export function createApplication(root, request, initialPlatform) {
+const document = root.ownerDocument
+let platform = initialPlatform
+let disposed = false
+const listeners = []
+const listen = (target, kind, handler) => { target.addEventListener(kind, handler); listeners.push(() => target.removeEventListener(kind, handler)) }
+let operationGeneration = 0
+const isCallback = false
 const flows = {
   authorization_code: {
     number: '01', title: '授权码 + PKCE', english: 'AUTHORIZATION CODE', standard: 'RFC 7636 · S256',
@@ -43,7 +40,7 @@ const flows = {
   },
 }
 
-document.querySelector('#app').innerHTML = `
+root.innerHTML = `
   <aside class="sidebar">
     <a class="brand" href="/" aria-label="OAuth 协议实验室首页"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span>OAuth<span class="brand-sub">协议实验室</span></span></a>
     <div class="rail-label">PLAYGROUND <span> / 01—04</span></div>
@@ -103,10 +100,11 @@ document.querySelector('#app').innerHTML = `
     <footer><span>OAuth Playground <span class="footer-divider">/</span> 协议演练工具</span><span id="public-origin">读取公开配置…</span></footer>
   </main>`
 
-const $ = selector => document.querySelector(selector)
+const $ = selector => root.querySelector(selector)
 const summaries = new Map()
 let config
-let activeFlow = Object.hasOwn(flows, location.hash.slice(1)) ? location.hash.slice(1) : 'authorization_code'
+const flowFromRoute = value => { const flow = value.routePath.split(/[?#]/, 1)[0].slice(value.basePath.length).replace(/^\//, ''); return Object.hasOwn(flows, flow) ? flow : 'authorization_code' }
+let activeFlow = flowFromRoute(platform)
 let busy = false
 let deviceRunning = false
 let countdown
@@ -148,7 +146,7 @@ function updateButtons() {
   $('#issue-password').disabled = busy || !capability('password')
   $('#username').disabled = busy || !capability('password')
   $('#password').disabled = busy || !capability('password')
-  document.querySelectorAll('[data-resource]').forEach(button => { button.disabled = busy || !capability($('#resource-flow').value) })
+  root.querySelectorAll('[data-resource]').forEach(button => { button.disabled = busy || !capability($('#resource-flow').value) })
   $('#resource-flow').disabled = busy || !config
 }
 
@@ -169,12 +167,12 @@ function selectFlow(flow, updateHash = true) {
   if (!Object.hasOwn(flows, flow)) return
   activeFlow = flow
   const item = flows[flow]
-  document.querySelectorAll('[data-flow]').forEach(button => {
+  root.querySelectorAll('[data-flow]').forEach(button => {
     const selected = button.dataset.flow === flow
     button.classList.toggle('active', selected)
     button.setAttribute('aria-pressed', String(selected))
   })
-  document.querySelectorAll('[data-panel]').forEach(panel => { panel.hidden = panel.dataset.panel !== flow })
+  root.querySelectorAll('[data-panel]').forEach(panel => { panel.hidden = panel.dataset.panel !== flow })
   $('#flow-number').textContent = item.number
   $('#flow-title').textContent = item.title
   $('#flow-english').textContent = item.english
@@ -192,7 +190,7 @@ function selectFlow(flow, updateHash = true) {
   $('#flow-capability').textContent = !config ? '等待配置' : enabled ? '可演练' : config.flows?.[flow]?.reason === 'legacy_password_disabled' ? '默认禁用' : '未配置'
   $('#flow-capability').classList.toggle('enabled', enabled)
   $('#resource-flow').value = flow
-  if (updateHash && !isCallback) history.replaceState(null, '', `/#${flow}`)
+  if (updateHash) platform.onNavigate(`${platform.basePath}/${flow}`)
   renderSummary()
   updateButtons()
 }
@@ -215,18 +213,21 @@ function acceptSummary(data, flow) {
 }
 
 async function perform(path, body = {}, { onSuccess } = {}) {
-  if (busy) return
+  if (busy || disposed) return
+  const generation = operationGeneration
   setBusy(true)
   try {
-    const reply = await apiRequest(`/api/${path}`, body)
+    const reply = await request(`/api/${path}`, body)
+    if (disposed || generation !== operationGeneration) return
     showResult(path, reply)
     if (reply.ok) onSuccess?.(reply.data)
     return reply
   } catch (error) {
+    if (disposed || generation !== operationGeneration) return
     notice(explainError(error.name === 'TimeoutError' ? 'request_timeout' : 'network_error'), 'error')
     log(`${path} · 请求未完成`, 'error')
   } finally {
-    setBusy(false)
+    if (!disposed && generation === operationGeneration) setBusy(false)
   }
 }
 
@@ -242,7 +243,7 @@ function stopDevice(message) {
 }
 
 const poller = createDevicePoller({
-  request: signal => apiRequest('/api/device-token', {}, signal),
+  request: signal => request('/api/device-token', {}, signal),
   onEvent(event) {
     if (event.kind === 'waiting' || event.kind === 'pending' || event.kind === 'slow_down') {
       const update = () => { $('#device-timing').textContent = `剩余 ${Math.max(0, Math.ceil((event.expiresAt - Date.now()) / 1000))} 秒 · 每 ${event.interval} 秒轮询` }
@@ -275,13 +276,13 @@ function trustedPlatformLink(raw) {
   } catch { return undefined }
 }
 
-$('#start-auth').addEventListener('click', () => perform('auth-start', {}, { onSuccess(data) {
+listen($('#start-auth'), 'click', () => perform('auth-start', {}, { onSuccess(data) {
   const authorizeUrl = trustedPlatformLink(data.authorizeUrl)
   if (authorizeUrl) location.assign(authorizeUrl)
   else notice('授权跳转地址不属于已配置的平台，已停止跳转。', 'error')
 } }))
 
-$('#start-device').addEventListener('click', async () => {
+listen($('#start-device'), 'click', async () => {
   if (busy || deviceRunning) return
   stopDevice()
   const generation = deviceStartGeneration
@@ -290,7 +291,7 @@ $('#start-device').addEventListener('click', async () => {
   $('#device-card').hidden = true
   updateButtons()
   try {
-    const reply = await apiRequest('/api/device-start', {}, deviceStartController.signal)
+    const reply = await request('/api/device-start', {}, deviceStartController.signal)
     if (generation !== deviceStartGeneration) return
     showResult('device-start', reply)
     const data = reply.data
@@ -311,10 +312,10 @@ $('#start-device').addEventListener('click', async () => {
     }
   }
 })
-$('#stop-device').addEventListener('click', () => stopDevice('设备轮询已停止，可重新申请用户码。'))
+listen($('#stop-device'), 'click', () => stopDevice('设备轮询已停止，可重新申请用户码。'))
 
-$('#issue-client_credentials').addEventListener('click', () => perform('cc-token', {}, { onSuccess: data => acceptSummary(data, 'client_credentials') }))
-$('#password-form').addEventListener('submit', event => {
+listen($('#issue-client_credentials'), 'click', () => perform('cc-token', {}, { onSuccess: data => acceptSummary(data, 'client_credentials') }))
+listen($('#password-form'), 'submit', event => {
   event.preventDefault()
   if (!capability('password') || busy) return
   const body = { username: $('#username').value, password: $('#password').value }
@@ -323,9 +324,9 @@ $('#password-form').addEventListener('submit', event => {
   void perform('password-token', body, { onSuccess: data => acceptSummary(data, 'password') })
 })
 
-document.querySelectorAll('[data-flow]').forEach(button => button.addEventListener('click', () => selectFlow(button.dataset.flow)))
-$('#resource-flow').addEventListener('change', () => { updateButtons() })
-document.querySelectorAll('[data-resource]').forEach(button => button.addEventListener('click', () => {
+root.querySelectorAll('[data-flow]').forEach(button => listen(button, 'click', () => selectFlow(button.dataset.flow)))
+listen($('#resource-flow'), 'change', () => { updateButtons() })
+root.querySelectorAll('[data-resource]').forEach(button => listen(button, 'click', () => {
   const flow = $('#resource-flow').value
   const operation = button.dataset.resource
   void perform(operation, { flow }, { onSuccess(data) {
@@ -337,34 +338,70 @@ document.querySelectorAll('[data-resource]').forEach(button => button.addEventLi
     } else notice('平台已返回真实资源响应。', 'ok')
   } })
 }))
-$('#clear-log').addEventListener('click', () => { $('#events').replaceChildren() })
-window.addEventListener('pagehide', () => stopDevice())
+listen($('#clear-log'), 'click', () => { $('#events').replaceChildren() })
+const onPageHide = () => stopDevice()
+listen(window, 'pagehide', onPageHide)
+listen($('.brand'), 'click', event => { event.preventDefault(); platform.onNavigate(platform.basePath) })
+listen($('.resource-nav'), 'click', event => { event.preventDefault(); $('#resources').scrollIntoView?.({ block: 'start' }) })
 
 selectFlow(isCallback ? 'authorization_code' : activeFlow, false)
-if (isCallback) notice('已接收平台回调，正在验证发起会话与一次性授权状态。')
+
 
 async function init() {
+  const generation = operationGeneration
   try {
-    const reply = await apiRequest('/api/config')
+    const reply = await request('/api/config')
     if (!reply.ok) throw new Error('config_unavailable')
+    if (disposed || generation !== operationGeneration) return
     config = reply.data
     $('#connection').classList.add('connected')
     $('#connection span').textContent = '流程 API 已连接'
     $('#public-origin').textContent = config.publicOrigin || location.origin
     selectFlow(activeFlow, false)
     log('公开配置已读取，流程能力由服务端决定。')
-    if (isCallback) {
-      const result = await perform('callback', callback, { onSuccess: data => acceptSummary(data, 'authorization_code') })
-      if (result?.ok && result.data?.granted !== true) notice('回调未返回授权摘要，请重新发起流程。', 'error')
-      callback = undefined
-    }
+
   } catch {
+    if (disposed || generation !== operationGeneration) return
     $('#connection').classList.add('unavailable')
     $('#connection span').textContent = '流程 API 不可达'
     notice('无法读取流程配置。请启动 Rust API 并检查同源代理，随后刷新页面。', 'error')
     log('配置请求失败，授权操作保持禁用。', 'error')
-    callback = undefined
   }
 }
 
-void init()
+const ready = init()
+return {
+  ready,
+  update(next, authorizationChanged) {
+    if (disposed) return
+    platform = next
+    root.dataset.theme = next.theme
+    if (authorizationChanged) {
+      operationGeneration++
+      stopDevice()
+      summaries.clear()
+      busy = false
+      $('#password').value = ''
+      $('#username').value = ''
+      $('#device-card').hidden = true
+      $('#device-user-code').textContent = ''
+      $('#device-authorize-link').removeAttribute('href')
+      $('#device-timing').textContent = ''
+      $('#device-status').textContent = ''
+      $('#response-json').textContent = '// 授权上下文已更新，请重新发起演练操作。'
+      $('#events').replaceChildren()
+    }
+    selectFlow(flowFromRoute(next), false)
+    if (authorizationChanged && !config) void init()
+  },
+  dispose() {
+    if (disposed) return
+    operationGeneration++
+    stopDevice()
+    disposed = true
+    summaries.clear()
+    for (const remove of listeners.splice(0)) remove()
+    root.replaceChildren()
+  },
+}
+}

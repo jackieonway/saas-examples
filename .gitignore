@@ -3,6 +3,7 @@ target/
 dist/
 .browsers/
 *.log
+artifacts/candidates/
 *.tsbuildinfo
 .env*
 *.pem

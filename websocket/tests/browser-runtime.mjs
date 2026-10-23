@@ -13,7 +13,6 @@ process.env.PLAYWRIGHT_BROWSERS_PATH = browserCache;
 const require = createRequire(import.meta.url);
 export const playwright = require('playwright');
 export const playwrightVersion = require('playwright/package.json').version;
-export const socketServer = require('socket.io').Server;
 export const browserName = process.env.SAAS_TEST_BROWSER || 'chromium';
 export const supportedBrowsers = ['chromium', 'chrome', 'msedge', 'firefox', 'webkit'];
 assert(supportedBrowsers.includes(browserName), `Unknown SAAS_TEST_BROWSER: ${browserName}`);
