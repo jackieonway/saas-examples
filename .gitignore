@@ -4,6 +4,7 @@ dist/
 .browsers/
 *.log
 artifacts/candidates/
+.integration/local-runtime/
 *.tsbuildinfo
 .env*
 *.pem
