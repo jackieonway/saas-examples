@@ -1,6 +1,6 @@
 # jQuery 微应用
 
-此示例将 jQuery 3.7.1 页面通过 classic HTML 接入 qiankun。应用编码和最终导出名为 `legacy-jquery`，使用 SDK 2.0.0 / MicroProps 2.0，演示平台上下文、菜单查询、通知与导航，以及授权变更后的请求取消。
+此示例将 jQuery 3.7.1 页面通过 classic HTML 接入 qiankun。应用编码和最终导出名为 `legacy-jquery`，使用 SDK 3.0.0 / MicroProps 2.0，演示平台上下文、菜单查询、通知与导航，以及授权变更后的请求取消。
 
 ## 开发与检查
 

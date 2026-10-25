@@ -61,11 +61,11 @@ function setup() {
     sdkVersion: window.MicroSdk.SDK_VERSION, contractVersion: '2.0', appCode: 'legacy-jquery', contextVersion: 'context-a', contextEpoch: 1,
     expiresAt: new Date(clockNow + 30000).toISOString(), tokenExpiresAt: new Date(clockNow + 300000).toISOString(),
     basePath: '/micro/legacy-jquery', routePath: '/micro/legacy-jquery', token: 'application-token-a',
-    user: { id: 'user-1', username: 'admin', displayName: 'Admin' }, tenant: { id: 'tenant-1', code: 'alpha', name: 'Alpha' },
-    organization: { id: 'org-a', name: 'Organization A', path: '/a' },
-    roles: [{ id: 'role-1', name: 'Viewer', code: 'viewer' }], permissions: ['ticket:read'],
-    dataGrants: [{ resource: 'ticket', action: 'read', scope: 'ORG', subjectUserId: 'user-1', tenantId: 'tenant-1', organizationIds: ['org-a'] }],
-    theme: 'light', menus: [{ id: 'menu-1', type: 'MENU', title: 'Ticket overview' }], signal: signal.signal,
+    user: { id: '019c0000-0000-7000-8000-000000000002', username: 'admin', displayName: 'Admin' }, tenant: { id: '019c0000-0000-7000-8000-000000000003', code: 'alpha', name: 'Alpha' },
+    organization: { id: '019c0000-0000-7000-8000-000000000004', name: 'Organization A', path: '/a' },
+    roles: [{ id: '019c0000-0000-7000-8000-000000000006', name: 'Viewer', code: 'viewer' }], permissions: ['ticket:read'],
+    dataGrants: [{ resource: 'ticket', action: 'read', scope: 'ORG', subjectUserId: '019c0000-0000-7000-8000-000000000002', tenantId: '019c0000-0000-7000-8000-000000000003', organizationIds: ['019c0000-0000-7000-8000-000000000004'] }],
+    theme: 'light', menus: [{ id: '019c0000-0000-7000-8000-000000000007', type: 'MENU', title: 'Ticket overview' }], signal: signal.signal,
     onNotify: (...args) => notifications.push(args), onNavigate() {},
   }
   const wrapper = { querySelector: selector => selector === '#app' ? container : null }
@@ -84,7 +84,7 @@ const settle = () => new Promise(resolve => setImmediate(resolve))
 test('MicroProps 2.0 displays tenant, organization, roles, operations and independent grants', async () => {
   const t = setup(); await t.lifecycle.mount({ container: t.wrapper, platform: t.props })
   const output = t.find('#mf-jq-context').innerHTML
-  for (const value of ['Alpha', 'Organization A', 'Viewer', 'ticket:read', 'ORG', 'org-a', 'Ticket overview']) assert.ok(output.includes(value), value)
+  for (const value of ['Alpha', 'Organization A', 'Viewer', 'ticket:read', 'ORG', '019c0000-0000-7000-8000-000000000004', 'Ticket overview']) assert.ok(output.includes(value), value)
   t.click('#mf-jq-btn-notify'); assert.deepEqual(t.notifications[0], ['来自 jQuery 遗留系统的消息', 'info'])
   t.change('#mf-jq-search', '数据库')
   const filtered = t.find('#mf-jq-tbody').innerHTML
@@ -113,7 +113,7 @@ test('organization changes reject delayed JSON and replace independent permissio
   const pending = t.click('#mf-jq-btn-menus'), json = deferred()
   t.requests[0].resolve(delayedResponse(json.promise)); await settle()
   await t.lifecycle.update({ platform: { ...t.props, contextVersion: 'context-b', contextEpoch: 2,
-    organization: { id: 'org-b', name: 'Organization B', path: '/b' }, roles: [], permissions: [], dataGrants: [], menus: [] } })
+    organization: { id: '019c0000-0000-7000-8000-000000000005', name: 'Organization B', path: '/b' }, roles: [], permissions: [], dataGrants: [], menus: [] } })
   json.resolve({ menus: [{ title: 'old organization' }] }); await pending
   assert.equal(t.find('#mf-jq-menu-list').innerHTML, '')
   const output = t.find('#mf-jq-context').innerHTML

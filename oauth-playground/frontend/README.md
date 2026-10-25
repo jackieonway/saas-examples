@@ -43,7 +43,7 @@ await app.update({
 await app.unmount()
 ```
 
-`platform` 是完整 SDK 2.0.0 / MicroProps 2.0，`appCode` 必须为 `oauth-playground`。入口只查找 `props.container` 内的 `#oauth-playground-root`，导出 `bootstrap/mount/update/unmount`。独立打开主 HTML 不自动挂载，也不生成平台身份。
+`platform` 是完整 SDK 3.0.0 / MicroProps 2.0，`appCode` 必须为 `oauth-playground`。入口只查找 `props.container` 内的 `#oauth-playground-root`，导出 `bootstrap/mount/update/unmount`。独立打开主 HTML 不自动挂载，也不生成平台身份。
 
 页面流程切换通过 `onNavigate` 请求 `/micro/oauth-playground/<flow>`，路由和主题由 update 同步。有效授权替换会取消旧请求和设备轮询、清除密码及旧结果；无效 update、宿主 signal 取消、上下文或 token 最早到期会立即撤销旧视图并清理请求、计时器与事件监听，后续有效上下文可恢复。显式 unmount 后 update 不会重新挂载。CSS 限定 `.oauth-playground`，主题写入应用节点。
 

@@ -1,6 +1,6 @@
 # Vue 微应用
 
-此示例使用 Vue 3.5.43 global 构建和 classic HTML 接入 qiankun。应用编码和最终导出名为 `vue-workshop`，使用 SDK 2.0.0 / MicroProps 2.0，展示菜单、角色、权限、数据授权与平台导航通信。
+此示例使用 Vue 3.5.43 global 构建和 classic HTML 接入 qiankun。应用编码和最终导出名为 `vue-workshop`，使用 SDK 3.0.0 / MicroProps 2.0，展示菜单、角色、权限、数据授权与平台导航通信。
 
 ## 开发与检查
 

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { launchBrowser } from './browser-runtime.mjs';
 import { build, preview } from 'vite';
-import { SDK_VERSION } from '../vendor/micro-app-sdk/2.0.0/index.mjs';
+import { SDK_VERSION } from '../vendor/micro-app-sdk/3.0.0/index.mjs';
 
 async function waitUntil(condition, description) {
   const deadline = Date.now() + 5000;
@@ -88,8 +88,8 @@ try {
       contextVersion: 'context-1', contextEpoch: 1,
       expiresAt: new Date(Date.now() + 30000).toISOString(), tokenExpiresAt: new Date(Date.now() + 60000).toISOString(),
       basePath: '/micro/websocket-chat', routePath: '/micro/websocket-chat', theme: 'light',
-      user: { id: 'user', username: 'alice', displayName: 'Alice' }, tenant: { id: 'tenant', code: 'tenant', name: 'Tenant' },
-      organization: { id: 'org-1', name: 'Organization', path: '/org' }, organizationScopeIds: ['org-1'],
+      user: { id: '019c0000-0000-7000-8000-000000000002', username: 'alice', displayName: 'Alice' }, tenant: { id: '019c0000-0000-7000-8000-000000000003', code: 'tenant', name: 'Tenant' },
+      organization: { id: '019c0000-0000-7000-8000-000000000004', name: 'Organization', path: '/org' }, organizationScopeIds: ['019c0000-0000-7000-8000-000000000004'],
       roles: [], permissions: [], dataGrants: [], menus: [], signal: controller.signal, onNavigate() {}, onNotify() {},
     };
     const root = document.querySelector('#root');
@@ -119,7 +119,7 @@ try {
 
   await page.evaluate(async () => {
     const test = window.__CHAT_TEST__;
-    test.platform = { ...test.platform, contextEpoch: 2, token: 'renewed-token', organization: { id: 'org-2', name: 'Next', path: '/next' } };
+    test.platform = { ...test.platform, contextEpoch: 2, token: 'renewed-token', organization: { id: '019c0000-0000-7000-8000-000000000005', name: 'Next', path: '/next' } };
     await test.lifecycle.update({ platform: test.platform });
   });
   await waitUntil(() => closed === connections, 'authorization change disconnects the previous chat');

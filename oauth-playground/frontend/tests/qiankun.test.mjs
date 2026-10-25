@@ -128,7 +128,7 @@ test('qiankun authorization changes cancel work and clear sensitive UI before a 
   await s.flush()
   const request = s.requests.find(request => request.method === 'POST')
   assert.ok(request)
-  await s.lifecycle.update({ platform: { ...platform, contextEpoch: 2, contextVersion: 'context-b', organization: { id: 'org-b', name: 'Organization B', path: '/b' }, token: 'replacement-platform-token' } })
+  await s.lifecycle.update({ platform: { ...platform, contextEpoch: 2, contextVersion: 'context-b', organization: { id: '019c0000-0000-7000-8000-000000000005', name: 'Organization B', path: '/b' }, token: 'replacement-platform-token' } })
   await s.flush()
   assert.equal(request.signal.aborted, true)
   assert.equal(s.query('[data-testid="password"]').value, '')

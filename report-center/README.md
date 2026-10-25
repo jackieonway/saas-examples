@@ -37,7 +37,7 @@ await application.update({ platform: nextMicroProps })
 await application.unmount()
 ```
 
-`microProps` 为 SDK 2.0.0 的完整 MicroProps 2.0，`appCode` 为 `report-center`。适配器从 `props.platform` 读取授权信息，查找 `props.container` 内的 `#report-center-root`，只导出标准 `bootstrap/mount/update/unmount`。缺失、过期上下文或无效 update 会清除授权视图；后续有效上下文可恢复挂载。
+`microProps` 为 SDK 3.0.0 的完整 MicroProps 2.0，`appCode` 为 `report-center`。适配器从 `props.platform` 读取授权信息，查找 `props.container` 内的 `#report-center-root`，只导出标准 `bootstrap/mount/update/unmount`。缺失、过期上下文或无效 update 会清除授权视图；后续有效上下文可恢复挂载。
 
 默认路由为 `/micro/report-center`，`/micro/report-center/shared` 展示独立运行时和平台回调。路由与主题通过平台 update 同步，应用通过 `onNavigate` 请求导航。普通 update 保留 React 根、按钮计数和计时器；授权签名变化则取消旧角色请求并屏蔽旧结果。宿主取消、上下文/令牌到期、卸载会清理视图和计时器。
 

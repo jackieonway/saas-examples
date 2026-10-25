@@ -45,11 +45,11 @@ function setup() {
     sdkVersion: window.MicroSdk.SDK_VERSION, contractVersion: '2.0', appCode: 'vue-workshop', contextVersion: 'context-a', contextEpoch: 1,
     expiresAt: new Date(clockNow + 30000).toISOString(), tokenExpiresAt: new Date(clockNow + 300000).toISOString(),
     basePath: '/micro/vue-workshop', routePath: '/micro/vue-workshop', token: 'application-token-a',
-    user: { id: 'user-1', username: 'admin', displayName: 'Admin' }, tenant: { id: 'tenant-1', code: 'alpha', name: 'Alpha' },
-    organization: { id: 'org-a', name: 'Organization A', path: '/a' },
-    roles: [{ id: 'role-1', name: 'Viewer', code: 'viewer' }], permissions: ['ticket:read'],
-    dataGrants: [{ resource: 'ticket', action: 'read', scope: 'SELF', subjectUserId: 'user-1', tenantId: 'tenant-1', organizationIds: [] }],
-    theme: 'light', menus: [{ id: 'menu-1', type: 'MENU', title: 'Ticket overview' }], signal: signal.signal,
+    user: { id: '019c0000-0000-7000-8000-000000000002', username: 'admin', displayName: 'Admin' }, tenant: { id: '019c0000-0000-7000-8000-000000000003', code: 'alpha', name: 'Alpha' },
+    organization: { id: '019c0000-0000-7000-8000-000000000004', name: 'Organization A', path: '/a' },
+    roles: [{ id: '019c0000-0000-7000-8000-000000000006', name: 'Viewer', code: 'viewer' }], permissions: ['ticket:read'],
+    dataGrants: [{ resource: 'ticket', action: 'read', scope: 'SELF', subjectUserId: '019c0000-0000-7000-8000-000000000002', tenantId: '019c0000-0000-7000-8000-000000000003', organizationIds: [] }],
+    theme: 'light', menus: [{ id: '019c0000-0000-7000-8000-000000000007', type: 'MENU', title: 'Ticket overview' }], signal: signal.signal,
     onNotify: (...args) => notifications.push(args), onNavigate() {},
   }
   const container = { innerHTML: '' }
@@ -94,9 +94,9 @@ test('organization update refuses delayed JSON and clears prior roles and permis
   const pending = t.instance.loadRoles(), json = deferred()
   t.requests[0].resolve(delayedResponse(json.promise)); await settle()
   await t.lifecycle.update({ platform: { ...t.props, contextVersion: 'context-b', contextEpoch: 2,
-    organization: { id: 'org-b', name: 'Organization B', path: '/b' }, roles: [], permissions: [], dataGrants: [], menus: [] } })
+    organization: { id: '019c0000-0000-7000-8000-000000000005', name: 'Organization B', path: '/b' }, roles: [], permissions: [], dataGrants: [], menus: [] } })
   json.resolve({ organizations: [{ roles: [{ name: 'old privileged role' }] }] }); await pending
-  assert.equal(t.instance.roles.data, null); assert.equal(t.instance.p.organization.id, 'org-b')
+  assert.equal(t.instance.roles.data, null); assert.equal(t.instance.p.organization.id, '019c0000-0000-7000-8000-000000000005')
   assert.equal(t.instance.p.permissions.length, 0); assert.equal(t.instance.p.dataGrants.length, 0)
   assert.ok(!JSON.stringify(t.render()).includes('old privileged role')); await t.lifecycle.unmount()
 })
@@ -155,7 +155,7 @@ test('qiankun final export scopes mounting and forwards authorization updates wi
   await t.qiankun.mount({ name: 'vue-workshop', container: wrapper, platform: t.props })
   assert.equal(t.mountedContainers[0], t.container)
   assert.equal(wrapper.innerHTML, 'qiankun wrapper')
-  assert.equal(t.instance.p.organization.id, 'org-a')
+  assert.equal(t.instance.p.organization.id, '019c0000-0000-7000-8000-000000000004')
   const instance = t.instance
   await t.qiankun.update({ platform: { ...t.props, routePath: '/micro/vue-workshop/security', theme: 'dark' } })
   assert.equal(t.instance, instance)
@@ -188,7 +188,7 @@ test('qiankun rejects missing local roots, invalid nested context and direct Mic
   await assert.rejects(t.qiankun.mount({ ...t.props, container: wrapper }), /props.platform/)
   await assert.rejects(t.qiankun.update({ ...t.props, theme: 'dark' }), /props.platform/)
   await t.qiankun.mount({ container: wrapper, platform: t.props })
-  assert.equal(t.instance.p.user.id, 'user-1')
+  assert.equal(t.instance.p.user.id, '019c0000-0000-7000-8000-000000000002')
   await t.qiankun.update({ platform: { ...t.props, theme: 'dark' } })
   assert.equal(t.instance.p.theme, 'dark')
   await t.qiankun.unmount()

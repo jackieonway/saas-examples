@@ -1,6 +1,6 @@
 # qiankun 微应用示例
 
-本仓库提供五个独立前端示例，以及聊天和 OAuth 两个独立 Rust 服务。当前前端源码统一采用 qiankun 标准 `bootstrap`、`mount`、`update`、`unmount` 生命周期，使用 SDK 2.0.0 的 MicroProps 2.0 授权上下文；平台接入配置为 `HTML + TRUSTED`。
+本仓库提供五个独立前端示例，以及聊天和 OAuth 两个独立 Rust 服务。当前前端源码统一采用 qiankun 标准 `bootstrap`、`mount`、`update`、`unmount` 生命周期，使用 SDK 3.0.0 的 MicroProps 2.0 授权上下文；平台接入配置为 `HTML + TRUSTED`。
 
 | 目录 | 应用编码 / 生命周期导出名 | 页面与能力 | 前端端口 | 独立 API 端口 |
 | --- | --- | --- | --- | --- |
@@ -53,7 +53,7 @@ Vue/jQuery、报表中心的 `/api/external/*` 请求发送到浏览器当前平
 
 每个前端的 `npm run build` 生成自己的 `dist/`。完整发布 `dist` 到新的不可变版本目录，保留相对资源路径、准确 MIME 和缺失资源的真实 404；跨域加载时允许实际宿主来源访问 HTML、JS、CSS。HTTPS 宿主需要 HTTPS 静态入口和业务服务。应用版本与 SDK 版本分别管理。
 
-SDK 副本来自独立 `saas-micro-app-sdk/releases/2.0.0`。仓库根 `dependencies.lock.json` 固定五处 SDK 副本及来源元数据，执行：
+SDK 活跃副本来自独立 `saas-micro-app-sdk/releases/3.0.0`，WebSocket 的 `vendor/micro-app-sdk/2.0.0/` 保留为历史归档。仓库根 `dependencies.lock.json` 固定五处 SDK 副本及来源元数据，执行：
 
 ```sh
 node scripts/check-inputs.mjs
@@ -71,7 +71,7 @@ node scripts/package-candidates.mjs <新候选名称>
 node scripts/verify-candidate.mjs artifacts/candidates/<新候选名称>
 ```
 
-门禁只读取表中五个当前 `dist`，用禁用执行和外部加载的 HTML DOM 解析处理注释、实体及无引号属性，再检查 classic HTML/相对资源、实际逐脚本执行的四个生命周期、局部挂载、SDK 1 上下文拒绝和 SDK 2 上下文接受。构建输出的 `build-provenance.json` 记录源码、public/vendor、包锁及共享构建配置的 SHA-256，以及实际 Node/npm 版本；输入变化或 Node 构建版本不符合当前基线时，门禁要求重建。
+门禁只读取表中五个当前 `dist`，用禁用执行和外部加载的 HTML DOM 解析处理注释、实体及无引号属性，再检查 classic HTML/相对资源、实际逐脚本执行的四个生命周期、局部挂载、SDK 1/2 上下文拒绝和携带 UUID v7 身份的 SDK 3 上下文接受。构建输出的 `build-provenance.json` 记录源码、public/vendor、包锁及共享构建配置的 SHA-256，以及实际 Node/npm 版本；输入变化或 Node 构建版本不符合当前基线时，门禁要求重建。
 
 候选输出到 `artifacts/candidates/<名称>/`，每个应用包含完整静态文件及逐文件 SHA-256 清单，汇总清单记录 Git 基线、工作树状态、验证器、依赖锁和构建输入摘要。`verify-candidate.mjs` 复核候选文件及其与当前输入的一致性。已有候选目录禁止覆盖；候选不代表已部署或业务授权验收。
 

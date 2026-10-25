@@ -12,7 +12,7 @@ export const applications = [
   { directory: 'micro-vue', appCode: 'vue-workshop', selector: '#app', source: 'public/vendor/micro-sdk.SOURCE.json' },
   { directory: 'micro-jquery', appCode: 'legacy-jquery', selector: '#app', source: 'public/vendor/micro-sdk.SOURCE.json' },
   { directory: 'report-center', appCode: 'report-center', selector: '#report-center-root', source: 'vendor/micro-sdk/SOURCE.json' },
-  { directory: 'websocket', appCode: 'websocket-chat', selector: '#root', source: 'vendor/micro-app-sdk/2.0.0/SOURCE.json' },
+  { directory: 'websocket', appCode: 'websocket-chat', selector: '#root', source: 'vendor/micro-app-sdk/3.0.0/SOURCE.json' },
   { directory: 'oauth-playground/frontend', appCode: 'oauth-playground', selector: '#oauth-playground-root', source: 'vendor/micro-sdk/SOURCE.json' },
 ]
 const digest = bytes => createHash('sha256').update(bytes).digest('hex')
@@ -68,7 +68,7 @@ export async function filesIn(directory, prefix = '') {
   return files.sort((left, right) => left.path.localeCompare(right.path))
 }
 
-async function exerciseLifecycle(application, scripts, directory) {
+export async function exerciseLifecycle(application, scripts, directory) {
   const { Window } = await happyDom
   const window = new Window({ url: `https://platform.example.test/micro/${application.appCode}` })
   const writes = Object.create(null)
@@ -110,16 +110,19 @@ async function exerciseLifecycle(application, scripts, directory) {
     assert.deepEqual(Object.keys(lifecycle).sort(), lifecycleKeys)
     for (const key of lifecycleKeys) assert.equal(typeof lifecycle[key], 'function')
     const platform = {
-      sdkVersion: '2.0.0', contractVersion: '2.0', appCode: application.appCode,
+      sdkVersion: '3.0.0', contractVersion: '2.0', appCode: application.appCode,
       token: 'delivery-test-only-token', contextVersion: 'delivery-test', contextEpoch: 1,
       expiresAt: new Date(Date.now() + 60000).toISOString(), tokenExpiresAt: new Date(Date.now() + 60000).toISOString(),
       basePath: `/micro/${application.appCode}`, routePath: `/micro/${application.appCode}`, theme: 'light',
-      user: { id: 'test-user', username: 'test', displayName: 'Test' }, tenant: { id: 'test-tenant', code: 'test', name: 'Test' },
-      organization: { id: 'test-org', name: 'Test', path: '/test' }, organizationScopeIds: [], roles: [], permissions: [], dataGrants: [], menus: [],
+      user: { id: '019a0b00-0000-7000-8000-000000000001', username: 'test', displayName: 'Test' },
+      tenant: { id: '019a0b00-0000-7000-8000-000000000002', code: 'test', name: 'Test' },
+      organization: { id: '019a0b00-0000-7000-8000-000000000003', name: 'Test', path: '/test' }, organizationScopeIds: [], roles: [], permissions: [], dataGrants: [], menus: [],
       signal: new AbortController().signal, onNavigate() {}, onNotify() {},
     }
     await lifecycle.bootstrap({})
-    await assert.rejects(lifecycle.mount({ container, platform: { ...platform, sdkVersion: '1.0.0' } }), `${application.appCode} must reject SDK 1 context`)
+    for (const sdkVersion of ['1.0.0', '2.0.0']) {
+      await assert.rejects(lifecycle.mount({ container, platform: { ...platform, sdkVersion } }), `${application.appCode} must reject SDK ${sdkVersion} context`)
+    }
     await lifecycle.mount({ container, platform })
     await lifecycle.update({ platform: { ...platform, theme: 'dark' } })
     assert.equal(window.document.querySelector('#host').textContent, 'host sentinel')
@@ -135,7 +138,7 @@ async function exerciseLifecycle(application, scripts, directory) {
 
 export async function verifyDelivery() {
   const lock = JSON.parse(await readFile(path.join(repository, 'dependencies.lock.json'), 'utf8'))
-  assert.equal(lock.sdkVersion, '2.0.0')
+  assert.equal(lock.sdkVersion, '3.0.0')
   const manifests = []
   for (const application of applications) {
     const directory = path.join(repository, application.directory, 'dist')
@@ -148,13 +151,13 @@ export async function verifyDelivery() {
       assert.ok(files.some(file => file.path === resource), `Missing emitted asset: ${application.appCode}/${resource}`)
     }
     const sdkSource = JSON.parse(await readFile(path.join(repository, application.directory, application.source), 'utf8'))
-    assert.equal(sdkSource.sdkVersion, '2.0.0')
+    assert.equal(sdkSource.sdkVersion, '3.0.0')
     assert.equal(sdkSource.baseCommit, lock.baseCommit)
     assert.equal(sdkSource.workingTree, lock.workingTree)
     await exerciseLifecycle(application, scripts, directory)
-    manifests.push({ schemaVersion: 1, appCode: application.appCode, sdkVersion: '2.0.0', contractVersion: '2.0',
+    manifests.push({ schemaVersion: 1, appCode: application.appCode, sdkVersion: '3.0.0', contractVersion: '2.0',
       entry: 'index.html', lifecycles: lifecycleKeys, sdkSource, buildProvenance, files })
-    console.log(`Verified classic HTML lifecycle and SDK 2: ${application.appCode} (${files.length} files)`)
+    console.log(`Verified classic HTML lifecycle and SDK 3: ${application.appCode} (${files.length} files)`)
   }
   return manifests
 }

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createSocketLifecycle } from '../src/qiankun-lifecycle.ts';
-import { SDK_VERSION } from '../vendor/micro-app-sdk/2.0.0/index.mjs';
+import { SDK_VERSION } from '../vendor/micro-app-sdk/3.0.0/index.mjs';
 
 class LocalRoot {
   dataset = {};
@@ -29,9 +29,9 @@ function setup() {
     basePath: '/micro/websocket-chat', routePath: '/micro/websocket-chat', theme: 'light',
     token: 'application-token', contextVersion: 'context-1', contextEpoch: 1,
     expiresAt: new Date(Date.now() + 30000).toISOString(), tokenExpiresAt: new Date(Date.now() + 60000).toISOString(),
-    user: { id: 'user-1', username: 'alice', displayName: 'Alice' },
-    tenant: { id: 'tenant-1', code: 'tenant', name: 'Tenant' }, organization: { id: 'org-1', name: 'Org', path: '/org' },
-    organizationScopeIds: ['org-1'], roles: [], permissions: [], dataGrants: [], menus: [],
+    user: { id: '019c0000-0000-7000-8000-000000000002', username: 'alice', displayName: 'Alice' },
+    tenant: { id: '019c0000-0000-7000-8000-000000000003', code: 'tenant', name: 'Tenant' }, organization: { id: '019c0000-0000-7000-8000-000000000004', name: 'Org', path: '/org' },
+    organizationScopeIds: ['019c0000-0000-7000-8000-000000000004'], roles: [], permissions: [], dataGrants: [], menus: [],
     signal: host.signal, onNavigate() {}, onNotify() {},
   };
   let mounts = 0, disposals = 0;

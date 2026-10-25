@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { parseEntry } from './verify-delivery.mjs'
+import { readFile } from 'node:fs/promises'
+import { exerciseLifecycle, parseEntry } from './verify-delivery.mjs'
 
 test('the HTML delivery gate rejects browser-recognized module syntax and encoded external assets', async () => {
   for (const html of [
@@ -30,4 +31,22 @@ test('comments and raw script text cannot become phantom module tags or assets',
   assert.equal(result.scripts.length, 2)
   const inert = await parseEntry('<script type="&Tab;module&NewLine;" src="inert.js"></script><script src="app.js"></script>')
   assert.deepEqual(inert.scripts, [{ src: 'app.js' }])
+})
+
+test('the lifecycle gate uses SDK 3 and UUID v7 identities with the actual classic SDK', async () => {
+  const sdk = await readFile(new URL('../micro-vue/public/vendor/micro-sdk.js', import.meta.url), 'utf8')
+  const lifecycle = `(() => {
+    let client, root;
+    window['delivery-fixture'] = {
+      async bootstrap() {},
+      async mount({ container, platform }) {
+        client = window.MicroSdk.createContextClient(platform);
+        root = container.querySelector('#app');
+        root.textContent = client.current().user.displayName;
+      },
+      async update({ platform }) { client.update(platform); },
+      async unmount() { client?.dispose(); if (root) root.textContent = ''; },
+    };
+  })();`
+  await exerciseLifecycle({ appCode: 'delivery-fixture', selector: '#app' }, [{ code: sdk }, { code: lifecycle }], '.')
 })

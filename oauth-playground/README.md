@@ -1,6 +1,6 @@
 # OAuth 演练微应用与独立 API
 
-此示例由 qiankun HTML/UMD 前端、独立 callback 工具页和 Rust 流程 API 组成。主应用编码为 `oauth-playground`，使用 SDK 2.0.0 / MicroProps 2.0。授权码 + PKCE、设备码、客户端凭据和可选历史 password 流程由 API 执行；客户端 secret、access/refresh token、verifier 和流程状态保存在后端有界内存中。
+此示例由 qiankun HTML/UMD 前端、独立 callback 工具页和 Rust 流程 API 组成。主应用编码为 `oauth-playground`，使用 SDK 3.0.0 / MicroProps 2.0。授权码 + PKCE、设备码、客户端凭据和可选历史 password 流程由 API 执行；客户端 secret、access/refresh token、verifier 和流程状态保存在后端有界内存中。
 
 ## 本地启动
 

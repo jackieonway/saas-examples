@@ -43,9 +43,9 @@ function fixture() {
     sdkVersion: SDK_VERSION, contractVersion: '2.0', contextVersion: 'context-1', contextEpoch: 1,
     expiresAt: new Date(Date.now() + 60_000).toISOString(), tokenExpiresAt: new Date(Date.now() + 300_000).toISOString(),
     appCode: 'report-center', basePath: '/micro/report-center', routePath: '/micro/report-center',
-    token: 'application-token', user: { id: 'user', username: 'alice', displayName: 'Alice' },
-    tenant: { id: 'tenant', code: 'tenant', name: '租户' }, organization: { id: 'org', name: '组织一', path: '/org' },
-    roles: [{ id: 'role', code: 'reader', name: '读者' }], permissions: [], dataGrants: [], menus: [],
+    token: 'application-token', user: { id: '019c0000-0000-7000-8000-000000000002', username: 'alice', displayName: 'Alice' },
+    tenant: { id: '019c0000-0000-7000-8000-000000000003', code: 'tenant', name: '租户' }, organization: { id: '019c0000-0000-7000-8000-000000000004', name: '组织一', path: '/org' },
+    roles: [{ id: '019c0000-0000-7000-8000-000000000006', code: 'reader', name: '读者' }], permissions: [], dataGrants: [], menus: [],
     organizationScopeIds: [], theme: 'light', signal: new window.AbortController().signal,
     onNavigate: path => calls.push(['navigate', path]), onNotify: (...args) => calls.push(['notify', ...args]), ...changes,
   })
@@ -116,7 +116,7 @@ test('authorization updates and unmount abort old requests and discard late role
     assert.equal(requests[0].options.credentials, 'omit')
     assert.equal(requests[0].options.headers.Authorization, 'Bearer application-token')
     const next = f.platform({ contextEpoch: 2, contextVersion: 'context-2', token: 'next-token',
-      organization: { id: 'org-2', name: '组织二', path: '/org-2' } })
+      organization: { id: '019c0000-0000-7000-8000-000000000005', name: '组织二', path: '/org-2' } })
     await f.lifecycle.update({ platform: next })
     assert.equal(requests[0].options.signal.aborted, true)
     requests[0].resolve({ ok: true, status: 200, json: async () => ({ organizations: [{ id: 'old', name: '旧组织迟到数据', tenantName: '', roles: [] }] }) })
@@ -189,7 +189,7 @@ test('same-epoch permission and data-grant changes discard previously loaded rol
     f.button('请求当前用户角色').click()
     await until(() => f.text().includes('旧授权角色数据'))
     await f.lifecycle.update({ platform: { ...context, permissions: ['report:limited'],
-      dataGrants: [{ resource: 'reports', scope: 'organization', organizationIds: ['org'] }] } })
+      dataGrants: [{ resource: 'reports', action: 'read', scope: 'ORG', subjectUserId: '019c0000-0000-7000-8000-000000000002', tenantId: '019c0000-0000-7000-8000-000000000003', organizationIds: ['019c0000-0000-7000-8000-000000000004'] }] } })
     await until(() => !f.text().includes('旧授权角色数据'))
     assert.deepEqual(f.errors, [])
   } finally { await f.close() }
@@ -215,7 +215,7 @@ test('version-prefixed static delivery serves relative resources and preserves m
   }
 })
 
-test('vendored SDK files match the SDK 2 artifact manifest', async () => {
+test('vendored SDK files match the SDK 3 artifact manifest', async () => {
   const manifest = JSON.parse(await read('vendor/micro-sdk/artifact-manifest.json'))
   assert.equal(manifest.sdkVersion, SDK_VERSION)
   for (const file of manifest.files) {

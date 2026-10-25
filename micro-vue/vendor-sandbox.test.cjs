@@ -41,10 +41,10 @@ function props(sdkVersion) {
     sdkVersion, contractVersion: '2.0', appCode: 'vue-workshop', contextVersion: 'context-a', contextEpoch: 1,
     expiresAt: new Date(now + 30000).toISOString(), tokenExpiresAt: new Date(now + 300000).toISOString(),
     basePath: '/micro/vue-workshop', routePath: '/micro/vue-workshop', token: 'application-token',
-    user: { id: 'user-1', username: 'admin', displayName: 'Admin' },
-    tenant: { id: 'tenant-1', code: 'alpha', name: 'Alpha' },
-    organization: { id: 'org-a', name: 'Organization A', path: '/a' },
-    roles: [{ id: 'role-1', name: 'Viewer', code: 'viewer' }], permissions: ['ticket:read'], dataGrants: [],
+    user: { id: '019c0000-0000-7000-8000-000000000002', username: 'admin', displayName: 'Admin' },
+    tenant: { id: '019c0000-0000-7000-8000-000000000003', code: 'alpha', name: 'Alpha' },
+    organization: { id: '019c0000-0000-7000-8000-000000000004', name: 'Organization A', path: '/a' },
+    roles: [{ id: '019c0000-0000-7000-8000-000000000006', name: 'Viewer', code: 'viewer' }], permissions: ['ticket:read'], dataGrants: [],
     menus: [], theme: 'light', signal: new AbortController().signal, onNotify() {}, onNavigate() {},
   }
 }

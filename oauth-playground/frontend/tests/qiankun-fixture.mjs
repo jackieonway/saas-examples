@@ -18,14 +18,14 @@ export const publicConfig = {
 
 export function platformProps(extra = {}) {
   return {
-    sdkVersion: '2.0.0', contractVersion: '2.0', appCode: 'oauth-playground',
+    sdkVersion: '3.0.0', contractVersion: '2.0', appCode: 'oauth-playground',
     basePath: '/micro/oauth-playground', routePath: '/micro/oauth-playground',
     contextVersion: 'context-a', contextEpoch: 1,
     expiresAt: new Date(Date.now() + 300000).toISOString(), tokenExpiresAt: new Date(Date.now() + 600000).toISOString(),
     token: 'sentinel-platform-bearer', signal: new AbortController().signal,
-    user: { id: 'user-a', username: 'admin', displayName: 'Admin' },
-    tenant: { id: 'tenant-a', code: 'alpha', name: 'Alpha' },
-    organization: { id: 'org-a', name: 'Organization A', path: '/a' }, organizationScopeIds: null,
+    user: { id: '019c0000-0000-7000-8000-000000000002', username: 'admin', displayName: 'Admin' },
+    tenant: { id: '019c0000-0000-7000-8000-000000000003', code: 'alpha', name: 'Alpha' },
+    organization: { id: '019c0000-0000-7000-8000-000000000004', name: 'Organization A', path: '/a' }, organizationScopeIds: null,
     roles: [], permissions: [], dataGrants: [], menus: [], theme: 'light', onNotify() {}, onNavigate() {}, ...extra,
   }
 }

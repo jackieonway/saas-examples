@@ -41,7 +41,7 @@ await app.update({ platform: nextMicroProps })
 await app.unmount()
 ```
 
-应用只接收 `props.platform` 内的完整 SDK 2.0.0 / MicroProps 2.0，挂载于 `props.container` 内的 `#root`。qiankun 的 `name/container` 和服务扩展不混入平台上下文。菜单路径可登记为 `/micro/websocket-chat`，应用权限与当前组织授权由宿主处理。
+应用只接收 `props.platform` 内的完整 SDK 3.0.0 / MicroProps 2.0，挂载于 `props.container` 内的 `#root`。qiankun 的 `name/container` 和服务扩展不混入平台上下文。菜单路径可登记为 `/micro/websocket-chat`，应用权限与当前组织授权由宿主处理。
 
 主题和路由更新保留当前连接。token、授权签名或宿主 signal 变化会销毁旧 React 根和 socket，清空聊天状态；用户需再次连接、加入。上下文或 token 到期、撤销、无效更新及卸载会清理 socket 监听器、重连任务、计时器和授权监听器。CSS 限定 `.saas-websocket-chat`。
 
@@ -72,6 +72,6 @@ npm run test:browser
 
 `artifacts/retired-release-1.0.0/` 与 `artifacts/websocket-chat-1.0.0.zip` 保留早期交付字节；旧 HTML 仍是 `type="module"` 入口，不能作为当前 qiankun 交付包。截图也只属于历史材料，不证明当前平台已登记、已授权或服务可用。
 
-SDK 固定副本位于 `vendor/micro-app-sdk/2.0.0/`，`SOURCE.json`、产物清单与仓库根 `dependencies.lock.json` 记录来源和摘要。当前 `workingTree: true` 表示包含未提交 SDK 迁移内容。升级后运行仓库根 `node scripts/check-inputs.mjs` 和本例检查。
+SDK 固定副本位于 `vendor/micro-app-sdk/3.0.0/`，`SOURCE.json`、产物清单与仓库根 `dependencies.lock.json` 记录来源和摘要。当前 `workingTree: true` 表示包含未提交 SDK 迁移内容。升级后运行仓库根 `node scripts/check-inputs.mjs` 和本例检查。
 
 本示例没有完整生产 Compose。Rust 服务仅绑定回环地址，生产需在同机设计受控 HTTPS/WebSocket 代理、明确 Origin 白名单和进程管理。协议、限额与后端配置见 [Rust API 说明](backend/README.md)。

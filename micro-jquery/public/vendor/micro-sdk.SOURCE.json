@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "sdkVersion": "2.0.0",
-  "source": "saas-micro-app-sdk/releases/2.0.0/sdk.js",
-  "baseCommit": "7dd1b57d01ecb2e2892728031364384b5b7439a6",
+  "sdkVersion": "3.0.0",
+  "source": "saas-micro-app-sdk/releases/3.0.0/sdk.js",
+  "baseCommit": "67031f14b522d49b3de63e0c1fc8bf7fe5fc7aa9",
   "workingTree": true,
   "files": [
     {
       "path": "micro-sdk.js",
-      "bytes": 18057,
-      "sha256": "3c1545da8ac535dd3a7a2fd619bcd2994977b8711a06a625fa661dda13ebb4df"
+      "bytes": 22996,
+      "sha256": "cd4143e916c4aba29cccbf1974b7b355a6aed6141a4ed45b657c37b2c94bfb71"
     }
   ]
 }

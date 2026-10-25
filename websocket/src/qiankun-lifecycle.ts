@@ -3,7 +3,7 @@ import {
   createContextClient,
   type ContextClient,
   type MicroProps,
-} from '../vendor/micro-app-sdk/2.0.0/index.mjs';
+} from '../vendor/micro-app-sdk/3.0.0/index.mjs';
 
 export interface QiankunProps {
   container?: { querySelector(selector: string): Element | null };
