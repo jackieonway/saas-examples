@@ -53,7 +53,7 @@ await app.unmount()
 
 微应用请求 `/oauth-playground-api/*`，网关重写为 Rust API 的 `/api/*`。API 使用自己的 HttpOnly 会话 Cookie 和准确 Origin 校验，不接收平台应用 Bearer token。Vite 代理移除 Authorization，只转发 `oauth_playground` 或 `__Host-oauth_playground` Cookie，并保留真实 Origin；生产 HTTPS 模板只转发其 API 实际使用的 `__Host-oauth_playground` Cookie。网关不伪造 Origin 或放宽 API 的会话/JSON 检查。
 
-挂载只自动读取公开配置；授权、换 token、刷新、吊销、password 和资源检查都由用户操作触发。设备轮询依照服务给出的 interval 及 slow_down 调整，取消或上下文替换终止轮询。API 不可用时显示失败并禁用相关动作，不切换到平台业务 API。
+挂载只自动读取公开配置；授权、换 token、刷新、吊销和资源检查都由用户操作触发。设备轮询依照服务给出的 interval 及 slow_down 调整，取消或上下文替换终止轮询。API 不可用时显示失败并禁用相关动作，不切换到平台业务 API。
 
 API 的 `OAUTH_PUBLIC_ORIGIN` 必须是浏览器公开平台来源，callback 固定为该来源加 `/callback`。需在真实客户端登记准确地址，并提供以下公开路由：
 
@@ -75,3 +75,5 @@ callback 是独立工具页。加载时先从地址栏清除授权查询，只�
 测试覆盖 API 路径与脱敏、RFC 8628 设备轮询，并实际构建、执行 UMD，验证局部挂载、严格嵌套上下文、显式交互、授权替换、取消/清理、callback 和 HTTP 静态交付。测试不登记真实 OAuth 客户端或发起业务授权。
 
 固定 SDK 位于 `vendor/micro-sdk/`。`SOURCE.json` 和仓库根 `dependencies.lock.json` 固定来源与 SHA-256；当前 `workingTree: true` 表示 SDK 副本含未提交迁移内容。升级后运行仓库根 `node scripts/check-inputs.mjs` 和本目录测试、构建。
+
+当前平台已移除 password grant；新系统只验证授权码/设备授权及机器凭据流程，不配置或启用历史 password 示例。人员账号在 SSO 认证中心登录。

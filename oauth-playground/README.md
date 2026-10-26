@@ -1,6 +1,6 @@
 # OAuth 演练微应用与独立 API
 
-此示例由 qiankun HTML/UMD 前端、独立 callback 工具页和 Rust 流程 API 组成。主应用编码为 `oauth-playground`，使用 SDK 3.0.0 / MicroProps 2.0。授权码 + PKCE、设备码、客户端凭据和可选历史 password 流程由 API 执行；客户端 secret、access/refresh token、verifier 和流程状态保存在后端有界内存中。
+此示例由 qiankun HTML/UMD 前端、独立 callback 工具页和 Rust 流程 API 组成。主应用编码为 `oauth-playground`，使用 SDK 3.0.0 / MicroProps 2.0。授权码 + PKCE、设备码、客户端凭据流程由 API 执行；客户端 secret、access/refresh token、verifier 和流程状态保存在后端有界内存中。
 
 ## 本地启动
 
@@ -83,3 +83,5 @@ OAUTH_TEST_NGINX=/usr/sbin/nginx OAUTH_TEST_OPENSSL=/usr/bin/openssl npm run tes
 ```
 
 测试使用当前 `frontend/dist`、临时自签证书与自有回环端口，执行真实 `nginx -t`、HTTPS 资源和 API 请求；验证固定 callback 别名、缺资源 404、Cookie/Authorization 筛选及缺失/错误 Origin 拒绝。不连接用户平台、数据库或真实 OAuth 客户端。
+
+当前平台已移除 password grant；新系统只验证授权码/设备授权及机器凭据流程，不配置或启用历史 password 示例。人员账号在 SSO 认证中心登录。
