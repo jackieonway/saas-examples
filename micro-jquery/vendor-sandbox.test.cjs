@@ -72,13 +72,56 @@ test('qiankun actual jQuery UMD publishes both proxy globals and cleans mounted 
     assert.equal(hostRoot.textContent, 'host content')
     await lifecycle.update({ platform: { ...platform, theme: 'dark', routePath: '/micro/legacy-jquery/other' } })
     assert.ok(wrapper.textContent.includes('/micro/legacy-jquery/other'))
-    assert.ok(sandbox.proxy.jQuery._data(document, 'events'), 'real jQuery delegated events are installed')
+    const root = wrapper.querySelector('#app')
+    assert.ok(sandbox.proxy.jQuery._data(root, 'events'), 'real jQuery delegated events are installed on the app container')
+    assert.equal(sandbox.proxy.jQuery._data(document, 'events'), undefined, 'host document stays untouched')
     await lifecycle.unmount()
     assert.equal(sandbox.proxy.jQuery._data(document, 'events'), undefined)
+    assert.equal(sandbox.proxy.jQuery._data(root, 'events'), undefined)
     assert.equal(wrapper.querySelector('#app').innerHTML, '')
     assert.equal(sandbox.intervals.size, 0)
     for (const key of ['jQuery', '$', 'MicroSdk', '__MICRO_APP__', 'legacy-jquery', '__JQ_APP_MARKER']) {
       assert.equal(sandbox.hostWindow[key], undefined, `${key} must stay on the proxy window`)
     }
+  } finally { await sandbox.close() }
+})
+
+test('menu requests and host notifications work inside an event-isolated application container', async () => {
+  const sandbox = await createSandbox()
+  try {
+    for (const file of ['vendor/jquery.min.js', 'vendor/micro-sdk.js', 'app.js', 'qiankun-entry.js']) {
+      sandbox.execute(fs.readFileSync(path.join(__dirname, 'public', file), 'utf8'), file)
+    }
+    const document = sandbox.hostWindow.document
+    document.body.innerHTML = '<main><div id="app"></div></main>'
+    const wrapper = document.querySelector('main'), root = wrapper.querySelector('#app')
+    // A host may contain bubbling events at its own boundary. Child controls
+    // must handle their events before they reach that boundary or document.
+    wrapper.addEventListener('click', event => event.stopPropagation())
+    const requests = [], notifications = []
+    // Network stream chunks must use the same byte realm as the sandbox SDK.
+    sandbox.proxy.Uint8Array = Uint8Array
+    sandbox.proxy.TextDecoder = TextDecoder
+    sandbox.proxy.fetch = async (url, options) => {
+      requests.push({ url, options })
+      return new Response(JSON.stringify({ menus: [{ title: 'Application menu' }] }),
+        { headers: { 'Content-Type': 'application/json' } })
+    }
+    const platform = { ...props(sandbox.proxy.MicroSdk.SDK_VERSION), onNotify: (...args) => notifications.push(args) }
+    const lifecycle = sandbox.proxy['legacy-jquery']
+    await lifecycle.mount({ container: wrapper, platform })
+    root.querySelector('#mf-jq-btn-menus').click()
+    for (let turn = 0; turn < 30 && root.querySelector('#mf-jq-menu-status').textContent === '请求中…'; turn++) {
+      await new Promise(resolve => setImmediate(resolve))
+    }
+    assert.equal(requests.length, 1, 'menu click must issue the actual SDK request')
+    assert.equal(requests[0].options.headers.get('Authorization'), 'Bearer application-token')
+    assert.ok(root.querySelector('#mf-jq-menu-list').textContent.includes('Application menu'), root.querySelector('#mf-jq-menu-status').textContent)
+    root.querySelector('#mf-jq-btn-notify').click()
+    assert.deepEqual(notifications, [['来自 jQuery 遗留系统的消息', 'info']])
+    const detachedButton = root.querySelector('#mf-jq-btn-notify')
+    await lifecycle.unmount()
+    detachedButton.click()
+    assert.equal(notifications.length, 1, 'unmounted controls cannot call the host')
   } finally { await sandbox.close() }
 })

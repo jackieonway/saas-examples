@@ -10,8 +10,8 @@
  * 实现说明:
  * - jQuery 来自 /vendor/jquery.min.js (先于本文件加载)。jQuery UMD 会显式把
  *   jQuery/$ 挂到 window 上, 沙箱内直接取 window.jQuery 即可 (兜底 window.$)。
- * - 事件采用「遗留风格」的 $(document) 命名空间委托 (.mfjq), unmount 时
- *   $(document).off('.mfjq') 精确解绑, 不污染主应用的事件表。
+ * - 事件委托到本应用挂载容器 (.mfjq)，在宿主拦截冒泡之前处理，
+ *   unmount 时精确解绑，不污染主应用的事件表。
  * - 样式全部手写、选择器一律 .mf-jq- 前缀, <style> 注入 mount 容器内, 卸载随容器清空。
  * - mount 时向 window 写入 __JQ_APP_MARKER (沙箱清理探针), 卸载时刻意不由本应用删除,
  *   该痕迹应由主应用沙箱负责回收, 供其验证「真实 window 无残留」。
@@ -402,7 +402,7 @@
       '<li>沙箱计时器: <b id="mf-jq-tick">0 秒</b>（每秒 +1）</li>' +
       '<li>window.__JQ_APP_MARKER 已写入: <code>' + esc(readMarker()) + '</code></li>' +
       '</ul>' +
-      '<p class="mf-jq-note">卸载时本应用解绑 $(document) 事件、清空容器并停止计时器；window 痕迹由主应用沙箱负责回收验证。</p>' +
+      '<p class="mf-jq-note">卸载时本应用解绑挂载容器事件、清空容器并停止计时器；window 痕迹由主应用沙箱负责回收验证。</p>' +
       '</div>' +
       '<div class="mf-jq-card">' +
       '<div class="mf-jq-card-title">与主应用通信</div>' +
@@ -422,11 +422,11 @@
     }
   }
 
-  /* ===== 事件绑定 (遗留风格: $(document) 命名空间委托, 卸载时精确 off) ===== */
+  /* ===== 容器内事件委托，避免依赖宿主是否允许事件冒泡至 document ===== */
   function bindEvents() {
     /* 调试探针: 属性经挂载容器可见(沙箱内 window 对外不可见) */
     try { mountContainer.setAttribute('data-jq-bind', 'start:' + $().jquery) } catch (e) {}
-    $(document)
+    $(mountContainer)
       .off('.mfjq')
       .on('click.mfjq', '.mf-jq-sort', function () {
         try { mountContainer.setAttribute('data-jq-fired', String(Date.now())) } catch (e) {}
@@ -449,6 +449,10 @@
       })
       .on('click.mfjq', '#mf-jq-btn-menus', fetchMenus)
       .on('click.mfjq', '#mf-jq-btn-notify', function () {
+        if (!contextUsable()) {
+          setStatus('#mf-jq-comm-note', '应用上下文已失效，等待宿主更新', false)
+          return
+        }
         var fn = currentProps && typeof currentProps.onNotify === 'function' ? currentProps.onNotify : null
         if (fn) {
           fn('来自 jQuery 遗留系统的消息', 'info')
@@ -475,7 +479,7 @@
           }
           stopContext()
           currentProps = null
-          if ($) $(document).off('.mfjq')
+          if ($ && mountContainer) $(mountContainer).off('.mfjq')
           if (tickTimer) { window.clearInterval(tickTimer); tickTimer = null }
           if (mountContainer) mountContainer.innerHTML = ''
           applyContext(props)
@@ -505,7 +509,7 @@
         } catch (err) {
           stopContext()
           currentProps = null
-          if ($) $(document).off('.mfjq')
+          if ($ && mountContainer) $(mountContainer).off('.mfjq')
           if (tickTimer) { window.clearInterval(tickTimer); tickTimer = null }
           if (mountContainer) mountContainer.innerHTML = ''
           mountContainer = null
@@ -517,7 +521,7 @@
       return new Promise(function (resolve) {
         stopContext()
         try {
-          if ($) $(document).off('.mfjq') // 解绑全部命名空间事件
+          if ($ && mountContainer) $(mountContainer).off('.mfjq') // 只解绑本应用容器事件
           if (tickTimer) {
             window.clearInterval(tickTimer) // 停止计时器
             tickTimer = null

@@ -127,12 +127,13 @@ test('host cancellation and expiry block requests and erase old authorized resul
   t.requests[0].resolve(response({ menus: [{ title: 'late' }] })); await pending
   assert.equal(t.find('#mf-jq-menu-list').innerHTML, '')
   assert.ok(t.find('#mf-jq-context').innerHTML.includes('上下文已失效'))
+  t.click('#mf-jq-btn-notify'); assert.equal(t.notifications.length, 0)
   await t.click('#mf-jq-btn-menus'); assert.equal(t.requests.length, 1)
   const fresh = trackedSignal(); await t.lifecycle.update({ platform: { ...t.props, signal: fresh.signal, contextEpoch: 2 } })
   t.advance(31000); await t.click('#mf-jq-btn-menus'); assert.equal(t.requests.length, 1)
   assert.equal(t.find('#mf-jq-btn-menus').disabled, true); await t.lifecycle.unmount()
 })
-test('repeated mounting cleans document listeners, intervals and host listeners', async () => {
+test('repeated mounting cleans container listeners, intervals and host listeners', async () => {
   const t = setup(); await t.lifecycle.mount({ container: t.wrapper, platform: t.props })
   const eventCount = t.events.size; assert.ok(eventCount > 0); assert.equal(t.timers.size, 1)
   await t.lifecycle.mount({ container: t.wrapper, platform: t.props })
