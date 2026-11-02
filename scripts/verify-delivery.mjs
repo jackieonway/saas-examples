@@ -13,7 +13,6 @@ export const applications = [
   { directory: 'micro-jquery', appCode: 'legacy-jquery', selector: '#app', source: 'public/vendor/micro-sdk.SOURCE.json' },
   { directory: 'report-center', appCode: 'report-center', selector: '#report-center-root', source: 'vendor/micro-sdk/SOURCE.json' },
   { directory: 'websocket', appCode: 'websocket-chat', selector: '#root', source: 'vendor/micro-app-sdk/3.0.0/SOURCE.json' },
-  { directory: 'oauth-playground/frontend', appCode: 'oauth-playground', selector: '#oauth-playground-root', source: 'vendor/micro-sdk/SOURCE.json' },
 ]
 const digest = bytes => createHash('sha256').update(bytes).digest('hex')
 const lifecycleKeys = ['bootstrap', 'mount', 'unmount', 'update']

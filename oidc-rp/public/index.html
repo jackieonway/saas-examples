@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Passage · 独立 OIDC 接入</title>
+  <link rel="stylesheet" href="/style.css"><script type="module" src="/app.js"></script>
+</head>
+<body>
+  <div class="sheet">
+    <header><a class="wordmark" href="/">Passage<span>↗</span></a><span class="edition">独立应用 / OIDC 01</span></header>
+    <main>
+      <section class="intro"><p class="eyebrow">一个账号，一次可信交接。</p><h1>从登录，<br>到你自己的应用。</h1><p class="lede">通过标准 OpenID Connect 验证身份。应用保留自己的会话；账号与授权由认证中心管理。</p><div class="rule"><span>AUTHORIZATION CODE</span><span>PKCE · S256</span></div></section>
+      <section class="workspace" aria-labelledby="workspace-title">
+        <div class="status"><span id="status-dot"></span><span id="status">正在检查会话</span><span class="number">01 / SESSION</span></div>
+        <h2 id="workspace-title">接入工作台</h2>
+        <div id="identity" hidden><p class="field">已验证身份</p><h3 id="display-name"></h3><dl><dt>签发方</dt><dd id="issuer"></dd><dt>应用内身份标识</dt><dd id="subject"></dd><dt>本地会话截止</dt><dd id="expires"></dd></dl></div>
+        <p id="empty">登录后，这里将显示认证中心确认的身份。无需成为平台业务成员。</p>
+        <div class="actions"><button id="login" class="primary">使用统一账号登录 <span>↗</span></button><button id="userinfo" hidden>重新验证身份</button><button id="refresh" hidden>刷新授权</button><button id="revoke" hidden>撤销令牌并退出本地</button></div>
+        <details id="extension" hidden><summary>认证中心登出扩展</summary><p>以下操作使用已声明的 RP 命令扩展。当前应用退出保留同意，全局退出会结束此账号在认证中心的其他会话。</p><div class="actions"><button id="current">退出当前应用</button><button id="global" class="danger">全局退出</button></div></details>
+        <button id="recover" hidden>查询原登出操作</button><p id="message" role="status" aria-live="polite"></p>
+      </section>
+    </main>
+    <footer><span>独立 BFF · 公开协议 · 服务端保管令牌</span><span>账号关联须分别证明双方控制权</span></footer>
+  </div>
+</body>
+</html>

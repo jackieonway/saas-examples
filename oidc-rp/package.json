@@ -1,0 +1,19 @@
+{
+  "name": "independent-oidc-rp",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Independent standard OIDC relying party and confidential machine client",
+  "engines": { "node": ">=24.22.1 <25", "npm": ">=11.16.0 <12" },
+  "packageManager": "npm@11.19.1",
+  "scripts": {
+    "start": "node server.mjs",
+    "machine": "node machine.mjs",
+    "check": "node scripts/check.mjs",
+    "test": "node --test --test-concurrency=1 tests/*.test.mjs"
+  },
+  "dependencies": {
+    "jose": "6.2.13",
+    "openid-client": "6.8.8"
+  }
+}
